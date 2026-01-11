@@ -2,6 +2,7 @@
 # Ralph for Claude Code - Autonomous AI agent loop
 # Adapted from snarktank/ralph for use with Claude Code CLI
 # Usage: ./ralph.sh [max_iterations] [project_dir]
+# Note: Uses Node.js for JSON parsing (no jq required)
 
 set -e
 
@@ -9,7 +10,7 @@ MAX_ITERATIONS=${1:-10}
 PROJECT_DIR=${2:-.}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# File paths - can be in script dir or project dir
+# File paths
 PRD_FILE="${PROJECT_DIR}/prd.json"
 PROGRESS_FILE="${PROJECT_DIR}/progress.txt"
 PROMPT_FILE="${SCRIPT_DIR}/prompt.md"
@@ -39,10 +40,17 @@ echo_error() {
   echo -e "${RED}[Ralph]${NC} $1"
 }
 
+# JSON helper using Node.js
+json_get() {
+  local file=$1
+  local query=$2
+  node -e "const fs=require('fs'); const d=JSON.parse(fs.readFileSync('$file','utf8')); console.log($query);" 2>/dev/null || echo ""
+}
+
 # Check for required files
 if [ ! -f "$PRD_FILE" ]; then
   echo_error "PRD file not found: $PRD_FILE"
-  echo_status "Create a prd.json file with your user stories. See prd.json.example for format."
+  echo_status "Create a prd.json file with your user stories."
   exit 1
 fi
 
@@ -51,10 +59,9 @@ if [ ! -f "$PROMPT_FILE" ]; then
   exit 1
 fi
 
-# Check for jq
-if ! command -v jq &> /dev/null; then
-  echo_error "jq is required but not installed."
-  echo_status "Install with: brew install jq (macOS) or apt install jq (Linux)"
+# Check for node
+if ! command -v node &> /dev/null; then
+  echo_error "Node.js is required but not installed."
   exit 1
 fi
 
@@ -67,7 +74,7 @@ fi
 
 # Archive previous run if branch changed
 if [ -f "$PRD_FILE" ] && [ -f "$LAST_BRANCH_FILE" ]; then
-  CURRENT_BRANCH=$(jq -r '.branchName // empty' "$PRD_FILE" 2>/dev/null || echo "")
+  CURRENT_BRANCH=$(json_get "$PRD_FILE" "d.branchName || ''")
   LAST_BRANCH=$(cat "$LAST_BRANCH_FILE" 2>/dev/null || echo "")
 
   if [ -n "$CURRENT_BRANCH" ] && [ -n "$LAST_BRANCH" ] && [ "$CURRENT_BRANCH" != "$LAST_BRANCH" ]; then
@@ -81,7 +88,6 @@ if [ -f "$PRD_FILE" ] && [ -f "$LAST_BRANCH_FILE" ]; then
     [ -f "$PROGRESS_FILE" ] && cp "$PROGRESS_FILE" "$ARCHIVE_FOLDER/"
     echo_status "Archived to: $ARCHIVE_FOLDER"
 
-    # Reset progress file for new run
     echo "# Ralph Progress Log" > "$PROGRESS_FILE"
     echo "Started: $(date)" >> "$PROGRESS_FILE"
     echo "---" >> "$PROGRESS_FILE"
@@ -90,7 +96,7 @@ fi
 
 # Track current branch
 if [ -f "$PRD_FILE" ]; then
-  CURRENT_BRANCH=$(jq -r '.branchName // empty' "$PRD_FILE" 2>/dev/null || echo "")
+  CURRENT_BRANCH=$(json_get "$PRD_FILE" "d.branchName || ''")
   if [ -n "$CURRENT_BRANCH" ]; then
     echo "$CURRENT_BRANCH" > "$LAST_BRANCH_FILE"
   fi
@@ -103,11 +109,23 @@ if [ ! -f "$PROGRESS_FILE" ]; then
   echo "---" >> "$PROGRESS_FILE"
 fi
 
-# Count total and completed stories
+# Count stories using Node.js
 count_stories() {
-  TOTAL=$(jq '.stories | length' "$PRD_FILE" 2>/dev/null || echo "0")
-  COMPLETED=$(jq '[.stories[] | select(.passes == true)] | length' "$PRD_FILE" 2>/dev/null || echo "0")
-  echo "$COMPLETED/$TOTAL"
+  node -e "
+    const fs = require('fs');
+    const d = JSON.parse(fs.readFileSync('$PRD_FILE', 'utf8'));
+    const total = d.stories.length;
+    const completed = d.stories.filter(s => s.passes === true).length;
+    console.log(completed + '/' + total);
+  " 2>/dev/null || echo "0/0"
+}
+
+remaining_stories() {
+  node -e "
+    const fs = require('fs');
+    const d = JSON.parse(fs.readFileSync('$PRD_FILE', 'utf8'));
+    console.log(d.stories.filter(s => s.passes !== true).length);
+  " 2>/dev/null || echo "0"
 }
 
 echo ""
@@ -121,8 +139,8 @@ echo_status "Stories: $(count_stories)"
 echo ""
 
 for i in $(seq 1 $MAX_ITERATIONS); do
-  # Check if all stories are complete before starting iteration
-  REMAINING=$(jq '[.stories[] | select(.passes != true)] | length' "$PRD_FILE" 2>/dev/null || echo "0")
+  # Check if all stories are complete
+  REMAINING=$(remaining_stories)
   if [ "$REMAINING" -eq 0 ]; then
     echo ""
     echo_success "All stories complete! Finished before iteration $i"
@@ -143,8 +161,6 @@ for i in $(seq 1 $MAX_ITERATIONS); do
     FULL_PROMPT+="\n\n---\n\n## Progress Log\n\n\`\`\`\n$(cat "$PROGRESS_FILE")\n\`\`\`"
   fi
 
-  # Run Claude Code with the prompt
-  # Using --print for non-interactive mode, --dangerously-skip-permissions for autonomous operation
   echo_status "Starting Claude Code..."
 
   OUTPUT=$(echo -e "$FULL_PROMPT" | claude --print --dangerously-skip-permissions 2>&1 | tee /dev/stderr) || true

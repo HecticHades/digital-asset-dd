@@ -142,6 +142,7 @@ model Organization {
   checklistItems ChecklistItem[]
   reports        Report[]
   auditLogs      AuditLog[]
+  invitations    UserInvitation[]
 
   @@map("organizations")
 }
@@ -172,6 +173,8 @@ model User {
   auditLogs            AuditLog[]
   createdClients       Client[]        @relation("CreatedBy")
   createdCases         Case[]          @relation("CreatedBy")
+  passwordResetTokens  PasswordResetToken[]
+  sentInvitations      UserInvitation[] @relation("InvitedBy")
 
   @@index([organizationId])
   @@index([email])
@@ -479,4 +482,43 @@ model AuditLog {
   @@index([entityType])
   @@index([timestamp])
   @@map("audit_logs")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  // User relation
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model UserInvitation {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  role      UserRole @default(ANALYST)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  // Organization relation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Invited by
+  invitedById String?
+  invitedBy   User?   @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@index([token])
+  @@index([email])
+  @@index([organizationId])
+  @@map("user_invitations")
 }

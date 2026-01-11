@@ -314,7 +314,7 @@
       "id": "US-031",
       "title": "Authentication system",
       "priority": 24,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Email/password login with NextAuth.js",
         "Session includes user and tenant context",

@@ -1,14 +1,25 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useSession, signOut } from 'next-auth/react'
 
 interface HeaderProps {
   onMenuClick: () => void
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
+  const { data: session } = useSession()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const userName = session?.user?.name || 'User'
+  const userEmail = session?.user?.email || ''
+  const userInitials = userName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -70,9 +81,9 @@ export function Header({ onMenuClick }: HeaderProps) {
             className="flex items-center gap-2 p-1 rounded-md hover:bg-slate-100"
           >
             <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-primary-700">JD</span>
+              <span className="text-sm font-medium text-primary-700">{userInitials}</span>
             </div>
-            <span className="hidden sm:block text-sm font-medium text-slate-700">John Doe</span>
+            <span className="hidden sm:block text-sm font-medium text-slate-700">{userName}</span>
             <svg
               className={`w-4 h-4 text-slate-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
               fill="none"
@@ -87,8 +98,8 @@ export function Header({ onMenuClick }: HeaderProps) {
           {userMenuOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 py-1">
               <div className="px-4 py-2 border-b border-slate-200">
-                <p className="text-sm font-medium text-slate-900">John Doe</p>
-                <p className="text-xs text-slate-500">john@example.com</p>
+                <p className="text-sm font-medium text-slate-900">{userName}</p>
+                <p className="text-xs text-slate-500">{userEmail}</p>
               </div>
               <a
                 href="/settings/profile"
@@ -105,8 +116,8 @@ export function Header({ onMenuClick }: HeaderProps) {
               <div className="border-t border-slate-200" />
               <button
                 onClick={() => {
-                  // TODO: Implement logout
                   setUserMenuOpen(false)
+                  signOut({ callbackUrl: '/login' })
                 }}
                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-slate-100"
               >
