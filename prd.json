@@ -544,7 +544,7 @@
       "id": "US-041",
       "title": "Webhook notifications",
       "priority": 41,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Configure webhook URLs per tenant",
         "Events: case.created, case.status_changed, risk_flag.created, document.uploaded",
