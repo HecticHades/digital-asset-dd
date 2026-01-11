@@ -246,7 +246,7 @@
       "id": "US-024",
       "title": "Compliance checklist",
       "priority": 19,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create checklist component for cases",
         "Default items: KYC verified, Source of Wealth documented, Source of Funds verified, Sanctions screening complete, Risk assessment complete",
