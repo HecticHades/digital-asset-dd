@@ -192,7 +192,7 @@
       "id": "US-015",
       "title": "Wallet management and ownership",
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Add wallet form: address, blockchain (ETH, BTC, Polygon, etc.), label",
         "Validate address format per blockchain",

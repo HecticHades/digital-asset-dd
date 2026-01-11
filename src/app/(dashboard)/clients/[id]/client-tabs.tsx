@@ -19,8 +19,10 @@ import {
 import { Modal, ModalContent, ModalFooter } from '@/components/ui/modal'
 import { DocumentUpload } from '@/components/uploads/document-upload'
 import { DocumentChecklist } from '@/components/documents/document-checklist'
+import { AddWalletForm } from '@/components/wallets/add-wallet-form'
 import { format } from 'date-fns'
 import type { Client, Wallet, Document, Transaction, Case, Blockchain, DocumentType, DocumentStatus, TransactionType, TransactionSource, CaseStatus, RiskLevel } from '@prisma/client'
+import { deleteWallet, verifyWallet, getWalletProofDocuments } from './wallets/actions'
 
 interface DocumentWithVerifier extends Document {
   verifiedBy?: { id: string; name: string; email: string } | null
@@ -66,6 +68,15 @@ export function ClientTabs({ client, documentChecklist }: ClientTabsProps) {
   const [verificationNotes, setVerificationNotes] = useState('')
   const [isVerifying, setIsVerifying] = useState(false)
 
+  // Wallet state
+  const [showAddWalletModal, setShowAddWalletModal] = useState(false)
+  const [verifyWalletModal, setVerifyWalletModal] = useState<Wallet | null>(null)
+  const [deleteWalletModal, setDeleteWalletModal] = useState<Wallet | null>(null)
+  const [proofDocuments, setProofDocuments] = useState<Array<{ id: string; originalName: string; category: DocumentType }>>([])
+  const [selectedProofDocId, setSelectedProofDocId] = useState('')
+  const [walletActionLoading, setWalletActionLoading] = useState(false)
+  const [walletError, setWalletError] = useState<string | null>(null)
+
   const handleUploadComplete = () => {
     setShowUploadModal(false)
     router.refresh()
@@ -103,6 +114,75 @@ export function ClientTabs({ client, documentChecklist }: ClientTabsProps) {
   const filteredDocuments = client.documents.filter((doc) =>
     statusFilter === 'ALL' ? true : doc.status === statusFilter
   )
+
+  // Wallet handlers
+  const handleAddWalletSuccess = () => {
+    setShowAddWalletModal(false)
+    router.refresh()
+  }
+
+  const handleOpenVerifyWallet = async (wallet: Wallet) => {
+    setWalletError(null)
+    setSelectedProofDocId('')
+    setVerifyWalletModal(wallet)
+    // Fetch available proof documents
+    const docs = await getWalletProofDocuments(client.id)
+    setProofDocuments(docs)
+  }
+
+  const handleVerifyWallet = async () => {
+    if (!verifyWalletModal || !selectedProofDocId) return
+
+    setWalletActionLoading(true)
+    setWalletError(null)
+
+    try {
+      const result = await verifyWallet({
+        walletId: verifyWalletModal.id,
+        proofDocumentId: selectedProofDocId,
+      })
+
+      if (!result.success) {
+        setWalletError(result.error || 'Failed to verify wallet')
+        return
+      }
+
+      setVerifyWalletModal(null)
+      setSelectedProofDocId('')
+      router.refresh()
+    } catch (error) {
+      console.error('Error verifying wallet:', error)
+      setWalletError('An unexpected error occurred')
+    } finally {
+      setWalletActionLoading(false)
+    }
+  }
+
+  const handleDeleteWallet = async () => {
+    if (!deleteWalletModal) return
+
+    setWalletActionLoading(true)
+    setWalletError(null)
+
+    try {
+      const result = await deleteWallet({
+        walletId: deleteWalletModal.id,
+      })
+
+      if (!result.success) {
+        setWalletError(result.error || 'Failed to delete wallet')
+        return
+      }
+
+      setDeleteWalletModal(null)
+      router.refresh()
+    } catch (error) {
+      console.error('Error deleting wallet:', error)
+      setWalletError('An unexpected error occurred')
+    } finally {
+      setWalletActionLoading(false)
+    }
+  }
 
   return (
     <>
@@ -150,48 +230,87 @@ export function ClientTabs({ client, documentChecklist }: ClientTabsProps) {
       </TabsContent>
 
       <TabsContent value="wallets">
-        {client.wallets.length === 0 ? (
-          <EmptyState
-            title="No wallets"
-            description="Add a wallet to track this client's on-chain activity."
-            icon={<WalletIcon />}
-          />
-        ) : (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Blockchain</TableHead>
-                  <TableHead>Label</TableHead>
-                  <TableHead>Verified</TableHead>
-                  <TableHead>Added</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {client.wallets.map((wallet) => (
-                  <TableRow key={wallet.id}>
-                    <TableCell className="font-mono text-sm">
-                      {truncateAddress(wallet.address)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge>{formatBlockchain(wallet.blockchain)}</Badge>
-                    </TableCell>
-                    <TableCell>{wallet.label || '-'}</TableCell>
-                    <TableCell>
-                      {wallet.isVerified ? (
-                        <Badge variant="success">Verified</Badge>
-                      ) : (
-                        <Badge variant="warning">Unverified</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>{format(wallet.createdAt, 'MMM d, yyyy')}</TableCell>
+        <div className="space-y-4">
+          {/* Wallets Actions Bar */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-slate-500">
+              {client.wallets.length} wallet{client.wallets.length !== 1 ? 's' : ''}
+            </div>
+            <Button onClick={() => setShowAddWalletModal(true)}>
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Add Wallet
+            </Button>
+          </div>
+
+          {client.wallets.length === 0 ? (
+            <EmptyState
+              title="No wallets"
+              description="Add a wallet to track this client's on-chain activity."
+              icon={<WalletIcon />}
+            />
+          ) : (
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Address</TableHead>
+                    <TableHead>Blockchain</TableHead>
+                    <TableHead>Label</TableHead>
+                    <TableHead>Verified</TableHead>
+                    <TableHead>Added</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-        )}
+                </TableHeader>
+                <TableBody>
+                  {client.wallets.map((wallet) => (
+                    <TableRow key={wallet.id}>
+                      <TableCell className="font-mono text-sm">
+                        <span title={wallet.address}>{truncateAddress(wallet.address)}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge>{formatBlockchain(wallet.blockchain)}</Badge>
+                      </TableCell>
+                      <TableCell>{wallet.label || '-'}</TableCell>
+                      <TableCell>
+                        {wallet.isVerified ? (
+                          <Badge variant="success">Verified</Badge>
+                        ) : (
+                          <Badge variant="warning">Unverified</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>{format(wallet.createdAt, 'MMM d, yyyy')}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {!wallet.isVerified && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenVerifyWallet(wallet)}
+                              title="Verify with proof document"
+                            >
+                              <ShieldCheckIcon className="w-4 h-4 text-green-600" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setWalletError(null)
+                              setDeleteWalletModal(wallet)
+                            }}
+                            title="Delete wallet"
+                          >
+                            <TrashIcon className="w-4 h-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          )}
+        </div>
       </TabsContent>
 
       <TabsContent value="documents">
@@ -647,6 +766,188 @@ export function ClientTabs({ client, documentChecklist }: ClientTabsProps) {
         </>
       )}
     </Modal>
+
+    {/* Add Wallet Modal */}
+    <Modal
+      isOpen={showAddWalletModal}
+      onClose={() => setShowAddWalletModal(false)}
+      title="Add Wallet"
+      size="md"
+    >
+      <ModalContent>
+        <AddWalletForm
+          clientId={client.id}
+          onSuccess={handleAddWalletSuccess}
+          onCancel={() => setShowAddWalletModal(false)}
+        />
+      </ModalContent>
+    </Modal>
+
+    {/* Verify Wallet Modal */}
+    <Modal
+      isOpen={!!verifyWalletModal}
+      onClose={() => {
+        setVerifyWalletModal(null)
+        setSelectedProofDocId('')
+        setWalletError(null)
+      }}
+      title="Verify Wallet Ownership"
+      size="md"
+    >
+      {verifyWalletModal && (
+        <>
+          <ModalContent>
+            <div className="space-y-4">
+              {walletError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{walletError}</p>
+                </div>
+              )}
+
+              {/* Wallet Details */}
+              <div className="p-4 bg-slate-50 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Address</span>
+                  <span className="text-sm font-mono">{truncateAddress(verifyWalletModal.address)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Blockchain</span>
+                  <Badge>{formatBlockchain(verifyWalletModal.blockchain)}</Badge>
+                </div>
+                {verifyWalletModal.label && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-500">Label</span>
+                    <span className="text-sm">{verifyWalletModal.label}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Proof Document Selection */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Select Proof Document
+                </label>
+                {proofDocuments.length === 0 ? (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
+                    <p className="text-sm text-amber-700">
+                      No verified documents available. Please upload and verify a document first
+                      (e.g., signed message, exchange statement showing address).
+                    </p>
+                  </div>
+                ) : (
+                  <Select
+                    value={selectedProofDocId}
+                    onChange={(e) => setSelectedProofDocId(e.target.value)}
+                    options={[
+                      { value: '', label: 'Select a document...' },
+                      ...proofDocuments.map((doc) => ({
+                        value: doc.id,
+                        label: `${doc.originalName} (${formatDocumentType(doc.category)})`,
+                      })),
+                    ]}
+                  />
+                )}
+                <p className="mt-2 text-xs text-slate-500">
+                  Link a verified document that proves ownership of this wallet address
+                  (e.g., signed message, exchange withdrawal confirmation, or wallet screenshot).
+                </p>
+              </div>
+            </div>
+          </ModalContent>
+          <ModalFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setVerifyWalletModal(null)
+                setSelectedProofDocId('')
+                setWalletError(null)
+              }}
+              disabled={walletActionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleVerifyWallet}
+              disabled={walletActionLoading || !selectedProofDocId}
+            >
+              {walletActionLoading ? 'Verifying...' : 'Verify Wallet'}
+            </Button>
+          </ModalFooter>
+        </>
+      )}
+    </Modal>
+
+    {/* Delete Wallet Modal */}
+    <Modal
+      isOpen={!!deleteWalletModal}
+      onClose={() => {
+        setDeleteWalletModal(null)
+        setWalletError(null)
+      }}
+      title="Delete Wallet"
+      size="sm"
+    >
+      {deleteWalletModal && (
+        <>
+          <ModalContent>
+            <div className="space-y-4">
+              {walletError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{walletError}</p>
+                </div>
+              )}
+
+              <p className="text-slate-600">
+                Are you sure you want to delete this wallet? This action cannot be undone.
+              </p>
+
+              {/* Wallet Details */}
+              <div className="p-4 bg-slate-50 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Address</span>
+                  <span className="text-sm font-mono">{truncateAddress(deleteWalletModal.address)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Blockchain</span>
+                  <Badge>{formatBlockchain(deleteWalletModal.blockchain)}</Badge>
+                </div>
+                {deleteWalletModal.label && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-500">Label</span>
+                    <span className="text-sm">{deleteWalletModal.label}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <p className="text-sm text-amber-700">
+                  Any transactions linked to this wallet will no longer be associated with it.
+                </p>
+              </div>
+            </div>
+          </ModalContent>
+          <ModalFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteWalletModal(null)
+                setWalletError(null)
+              }}
+              disabled={walletActionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteWallet}
+              disabled={walletActionLoading}
+            >
+              {walletActionLoading ? 'Deleting...' : 'Delete Wallet'}
+            </Button>
+          </ModalFooter>
+        </>
+      )}
+    </Modal>
     </>
   )
 }
@@ -823,6 +1124,22 @@ function DownloadIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+  )
+}
+
+function ShieldCheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  )
+}
+
+function TrashIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
     </svg>
   )
 }
