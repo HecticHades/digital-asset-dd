@@ -1,13 +1,13 @@
 {
   "project": "Digital Asset Due Diligence Tool",
-  "description": "Banking client onboarding tool for digital asset wealth verification",
-  "branchName": "ralph/initial-build",
+  "description": "Banking client onboarding tool for verifying wealth generated through digital assets. Multi-tenant with 5 roles: Admin, Manager, Analyst, Compliance Officer, Auditor.",
+  "branchName": "ralph/mvp-build",
   "stories": [
     {
       "id": "US-001",
       "title": "Initialize Next.js app structure",
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "acceptanceCriteria": [
         "Create tsconfig.json, next.config.js, tailwind.config.ts, postcss.config.js",
         "Create src/app/layout.tsx and src/app/globals.css",
@@ -21,8 +21,9 @@
       "priority": 2,
       "passes": false,
       "acceptanceCriteria": [
-        "Create prisma/schema.prisma with models: Client, Case, Wallet, Transaction, Document",
-        "Include proper enums for status, risk levels, transaction types",
+        "Create prisma/schema.prisma with models: Organization, User, Client, Case, Wallet, Transaction, Document, Finding, ChecklistItem, Report, AuditLog",
+        "Include tenant_id on all tenant-scoped tables",
+        "Include enums for: ClientStatus, CaseStatus, RiskLevel, TransactionType, DocumentType, Blockchain, UserRole",
         "Create src/lib/db.ts with Prisma client singleton"
       ]
     },
@@ -32,10 +33,12 @@
       "priority": 3,
       "passes": false,
       "acceptanceCriteria": [
-        "Create src/components/ui/button.tsx with variants",
-        "Create src/components/ui/input.tsx",
-        "Create src/components/ui/card.tsx",
-        "Create src/components/ui/badge.tsx for status/risk display"
+        "Create src/components/ui/button.tsx with variants (primary, secondary, destructive, outline)",
+        "Create src/components/ui/input.tsx with label and error states",
+        "Create src/components/ui/card.tsx with header, content, footer",
+        "Create src/components/ui/badge.tsx for status and risk level display",
+        "Create src/components/ui/select.tsx for dropdowns",
+        "Create src/components/ui/table.tsx for data tables"
       ]
     },
     {
@@ -45,9 +48,10 @@
       "passes": false,
       "acceptanceCriteria": [
         "Create src/components/layout/sidebar.tsx with nav links",
-        "Create src/components/layout/header.tsx",
-        "Create src/app/(dashboard)/layout.tsx",
-        "Navigation: Dashboard, Clients, Cases, Reports"
+        "Create src/components/layout/header.tsx with user menu",
+        "Create src/app/(dashboard)/layout.tsx using these components",
+        "Navigation: Dashboard, Clients, Cases, Reports, Settings",
+        "Responsive sidebar (collapsible on mobile)"
       ]
     },
     {
@@ -57,9 +61,11 @@
       "passes": false,
       "acceptanceCriteria": [
         "Create src/app/(dashboard)/clients/page.tsx with client table",
+        "Table columns: name, email, status, risk level, created date, actions",
         "Create src/app/(dashboard)/clients/new/page.tsx with form",
-        "Fields: name, email, phone, notes",
-        "Create server action to save client"
+        "Form fields: name, email, phone, address, notes",
+        "Zod validation schema",
+        "Server action to create client"
       ]
     },
     {
@@ -69,9 +75,9 @@
       "passes": false,
       "acceptanceCriteria": [
         "Create src/app/(dashboard)/clients/[id]/page.tsx",
-        "Show client info, wallets, documents tabs",
-        "Add wallet form (address, blockchain, label)",
-        "List client's wallets"
+        "Display client info with edit capability",
+        "Tabs: Overview, Wallets, Documents, Transactions, Cases",
+        "Show client status and risk level prominently"
       ]
     },
     {
@@ -80,11 +86,12 @@
       "priority": 7,
       "passes": false,
       "acceptanceCriteria": [
-        "Create src/lib/parsers/binance.ts",
-        "Create src/lib/parsers/coinbase.ts",
-        "Create src/lib/parsers/kraken.ts",
-        "Each parser normalizes to standard Transaction format",
-        "Auto-detect exchange from CSV headers"
+        "Create src/lib/parsers/binance.ts for Binance trade history CSV",
+        "Create src/lib/parsers/coinbase.ts for Coinbase transaction CSV",
+        "Create src/lib/parsers/kraken.ts for Kraken ledger CSV",
+        "Create src/lib/parsers/index.ts with auto-detect function based on headers",
+        "Normalize all to Transaction interface: timestamp, type, asset, amount, price, fee, exchange",
+        "Handle date format variations"
       ]
     },
     {
@@ -94,9 +101,11 @@
       "passes": false,
       "acceptanceCriteria": [
         "Create src/components/uploads/cex-upload.tsx",
-        "Drag-and-drop CSV upload",
-        "Preview parsed transactions",
-        "Save to database linked to client"
+        "Drag-and-drop zone for CSV files",
+        "Auto-detect exchange from file",
+        "Preview parsed transactions before import",
+        "Show parsing errors clearly",
+        "Server action to save transactions"
       ]
     },
     {
@@ -105,10 +114,11 @@
       "priority": 9,
       "passes": false,
       "acceptanceCriteria": [
-        "Display transactions for a client",
-        "Filter by type, asset, date range",
-        "Sort by columns",
-        "Show summary stats"
+        "Display transactions for a client in sortable table",
+        "Filter by: type, asset, date range, source (CEX/on-chain)",
+        "Columns: date, type, asset, amount, price, value, source",
+        "Summary stats: total volume, unique assets, date range",
+        "Pagination"
       ]
     },
     {
@@ -117,10 +127,12 @@
       "priority": 10,
       "passes": false,
       "acceptanceCriteria": [
-        "Create src/app/(dashboard)/cases/page.tsx with list",
-        "Create src/app/(dashboard)/cases/new/page.tsx",
-        "Case links to client, has status and risk level",
-        "Create src/app/(dashboard)/cases/[id]/page.tsx detail view"
+        "Create src/app/(dashboard)/cases/page.tsx with case list",
+        "Filter by status, assignee, risk level",
+        "Create src/app/(dashboard)/cases/new/page.tsx with form",
+        "Link case to client, set status, assign analyst",
+        "Create src/app/(dashboard)/cases/[id]/page.tsx detail view",
+        "Show case status, risk score, assigned users, timeline"
       ]
     },
     {
@@ -130,9 +142,11 @@
       "passes": false,
       "acceptanceCriteria": [
         "Create src/lib/analyzers/risk.ts",
-        "Calculate risk score 0-100 based on transaction patterns",
-        "Display risk breakdown on case page",
-        "Flag high-risk indicators"
+        "Calculate overall risk score 0-100",
+        "Risk categories: Sanctions, Mixer, Source, Jurisdiction, Behavior, Privacy, Market",
+        "Weight each category appropriately",
+        "Return breakdown object with score per category",
+        "Display risk breakdown on case page with visual chart"
       ]
     },
     {
@@ -142,9 +156,401 @@
       "passes": false,
       "acceptanceCriteria": [
         "Create src/app/(dashboard)/dashboard/page.tsx",
-        "Show stats: total clients, active cases, pending reviews",
-        "Recent activity list",
+        "Stats cards: total clients, active cases, pending reviews, high-risk flags",
+        "Recent activity feed",
+        "Cases by status chart",
         "Quick action buttons"
+      ]
+    },
+    {
+      "id": "US-013",
+      "title": "Document upload and categorization",
+      "priority": 13,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/components/uploads/document-upload.tsx",
+        "Upload PDF, images (jpg, png)",
+        "Document categories: ID, Proof of Address, Tax Returns, Bank Statements, Source of Wealth, Source of Funds, Exchange Statements, Wallet Proof",
+        "Store metadata: filename, type, category, upload date, status",
+        "Document preview in modal"
+      ]
+    },
+    {
+      "id": "US-014",
+      "title": "Document verification workflow",
+      "priority": 14,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Mark documents as verified/rejected with notes",
+        "Track verifier and verification timestamp",
+        "Show document checklist per client with status",
+        "Flag missing required documents",
+        "Filter documents by status"
+      ]
+    },
+    {
+      "id": "US-015",
+      "title": "Wallet management and ownership",
+      "priority": 15,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Add wallet form: address, blockchain (ETH, BTC, Polygon, etc.), label",
+        "Validate address format per blockchain",
+        "Mark wallet as verified with proof document link",
+        "List wallets on client detail page",
+        "Delete wallet option"
+      ]
+    },
+    {
+      "id": "US-016",
+      "title": "On-chain transaction fetching",
+      "priority": 16,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/lib/blockchain/etherscan.ts for EVM chains",
+        "Create src/lib/blockchain/blockchair.ts for Bitcoin",
+        "Fetch and store transactions linked to wallet",
+        "Show transaction timeline with counterparty addresses",
+        "Calculate wallet balance at any point in time",
+        "Button to refresh/sync transactions"
+      ]
+    },
+    {
+      "id": "US-017",
+      "title": "On-chain address risk screening",
+      "priority": 17,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/lib/screening/sanctions.ts with OFAC list check",
+        "Detect known mixer addresses (Tornado Cash contracts)",
+        "Flag privacy coin transactions (Monero, Zcash)",
+        "Store screening results with timestamp",
+        "Display risk flags on wallet detail"
+      ]
+    },
+    {
+      "id": "US-023",
+      "title": "Risk flag management",
+      "priority": 18,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Auto-generate flags from analysis (sanctions, mixer, etc.)",
+        "Manual flag creation by analyst",
+        "Flag fields: title, description, severity, category, linked transaction/address",
+        "Severity levels: Info, Low, Medium, High, Critical",
+        "Flag resolution workflow with notes and resolved_by",
+        "Display flags on case page grouped by severity"
+      ]
+    },
+    {
+      "id": "US-024",
+      "title": "Compliance checklist",
+      "priority": 19,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create checklist component for cases",
+        "Default items: KYC verified, Source of Wealth documented, Source of Funds verified, Sanctions screening complete, Risk assessment complete",
+        "Track completion: completed, completed_at, completed_by, notes",
+        "Calculate completion percentage",
+        "Block case submission if incomplete"
+      ]
+    },
+    {
+      "id": "US-025",
+      "title": "Case approval workflow",
+      "priority": 20,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Analyst submits case for review (changes status to Pending Review)",
+        "Compliance officer sees pending cases in their view",
+        "Approve/Reject buttons with required comment",
+        "Store approval decision, comment, approver, timestamp",
+        "Approved cases marked as Completed",
+        "Rejected cases return to analyst with feedback"
+      ]
+    },
+    {
+      "id": "US-026",
+      "title": "Report template structure",
+      "priority": 21,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/lib/reports/template.ts defining report structure",
+        "Sections: Cover, TOC, Executive Summary, Client Profile, Portfolio Summary, CEX Analysis, On-chain Analysis, Risk Assessment, Conclusion, Appendices",
+        "Executive Summary includes: source of wealth/funds, doc completeness, trustworthiness, net worth, legitimacy assessment",
+        "Detailed CEX section per exchange: activity, gains/losses, patterns, flags",
+        "Detailed on-chain section per wallet: timeline, counterparties, flags"
+      ]
+    },
+    {
+      "id": "US-027",
+      "title": "PDF report generation",
+      "priority": 22,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/app/api/reports/[caseId]/route.ts",
+        "Generate PDF using @react-pdf/renderer or puppeteer",
+        "Include all report sections with data",
+        "Charts for holdings breakdown",
+        "Transaction tables with pagination",
+        "Professional formatting with logo placeholder",
+        "Store generated PDF and link to case"
+      ]
+    },
+    {
+      "id": "US-028",
+      "title": "Report versioning",
+      "priority": 23,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Track report versions (v1, v2, etc.)",
+        "Store each generated report as separate record",
+        "Show version history on case page",
+        "Lock final report after case approval",
+        "Download any version"
+      ]
+    },
+    {
+      "id": "US-031",
+      "title": "Authentication system",
+      "priority": 24,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Email/password login with NextAuth.js",
+        "Session includes user and tenant context",
+        "Password reset flow via email",
+        "Account lockout after 5 failed attempts",
+        "Invite-based registration (no public signup)",
+        "Login page at /login"
+      ]
+    },
+    {
+      "id": "US-032",
+      "title": "Role-based access control",
+      "priority": 25,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Roles: Admin, Manager, Analyst, Compliance Officer, Auditor",
+        "Create middleware to check permissions",
+        "Admin: full access",
+        "Manager: all cases, assign analysts, workload view",
+        "Analyst: assigned cases only, import data, analyze",
+        "Compliance Officer: review, approve/reject, reports",
+        "Auditor: read-only all data",
+        "Protect routes based on role"
+      ]
+    },
+    {
+      "id": "US-033",
+      "title": "User management (Admin)",
+      "priority": 26,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/app/(dashboard)/settings/users/page.tsx",
+        "List all users in organization",
+        "Create new user with email invite",
+        "Edit user: name, role, active status",
+        "Deactivate user (soft delete)",
+        "View user activity log"
+      ]
+    },
+    {
+      "id": "US-018",
+      "title": "CEX API integration",
+      "priority": 27,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/lib/exchanges/binance-api.ts",
+        "Create src/lib/exchanges/coinbase-api.ts",
+        "Create src/lib/exchanges/kraken-api.ts",
+        "Connect via API keys (read-only permissions)",
+        "Fetch trade history, balances, deposits/withdrawals",
+        "Encrypted API key storage",
+        "UI to add/remove API connections per client"
+      ]
+    },
+    {
+      "id": "US-019",
+      "title": "CEX gains/losses calculation",
+      "priority": 28,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/lib/analyzers/gains.ts",
+        "Calculate realized gains/losses per asset",
+        "Support cost basis methods: FIFO, LIFO, Average Cost",
+        "Track acquisition dates for each position",
+        "Show holdings value as of specific date",
+        "Export to CSV for tax purposes"
+      ]
+    },
+    {
+      "id": "US-020",
+      "title": "CEX portfolio snapshot",
+      "priority": 29,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Show current holdings across all connected exchanges",
+        "Historical balance at any selected date",
+        "Aggregate holdings across exchanges by asset",
+        "Display as part of client's overall net worth",
+        "Charts for portfolio composition"
+      ]
+    },
+    {
+      "id": "US-021",
+      "title": "DEX transaction detection",
+      "priority": 30,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/lib/analyzers/dex.ts",
+        "Identify DEX swaps from on-chain data (Uniswap, SushiSwap, etc.)",
+        "Parse swap events for token pairs and amounts",
+        "Calculate effective swap prices",
+        "Track liquidity provision/removal if present"
+      ]
+    },
+    {
+      "id": "US-022",
+      "title": "DEX aggregated view",
+      "priority": 31,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Consolidate DEX activity per wallet on client page",
+        "Show trading volume by DEX protocol",
+        "List all DEX swaps with details",
+        "Identify wash trading patterns (self-trades)"
+      ]
+    },
+    {
+      "id": "US-029",
+      "title": "Audit logging",
+      "priority": 32,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Log all user actions: create, update, delete, view",
+        "Log fields: user_id, action, entity_type, entity_id, details, timestamp, ip_address",
+        "Immutable logs (no update/delete)",
+        "Create src/app/(dashboard)/settings/audit/page.tsx to view logs",
+        "Filter by user, action, entity, date range",
+        "Export audit logs to CSV"
+      ]
+    },
+    {
+      "id": "US-030",
+      "title": "Data retention policies",
+      "priority": 33,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Configure retention period per data type in settings",
+        "Archive old cases (move to archive table)",
+        "Secure deletion with audit record",
+        "Show archived cases separately",
+        "Prevent deletion of active cases"
+      ]
+    },
+    {
+      "id": "US-034",
+      "title": "Organization/Tenant management",
+      "priority": 34,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create Organization model with settings",
+        "Super-admin can create new organizations",
+        "Organization settings: name, logo, custom compliance templates",
+        "Complete data isolation between tenants",
+        "Tenant-specific configuration stored in Organization"
+      ]
+    },
+    {
+      "id": "US-035",
+      "title": "Manager dashboard",
+      "priority": 35,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create manager-specific dashboard view",
+        "Show all analysts' workload (cases per analyst)",
+        "Assign/reassign cases to analysts",
+        "Track case progress across team",
+        "SLA/deadline monitoring with overdue alerts"
+      ]
+    },
+    {
+      "id": "US-036",
+      "title": "In-app notifications",
+      "priority": 36,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Notification bell icon in header",
+        "Notification types: case assigned, case status changed, new risk flag, deadline approaching",
+        "Mark as read/unread",
+        "Notification preferences per user",
+        "Real-time updates (polling or websocket)"
+      ]
+    },
+    {
+      "id": "US-037",
+      "title": "Email notifications",
+      "priority": 37,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Email on: case assignment, deadline reminder, high-risk flag",
+        "Daily/weekly digest option",
+        "Configurable per user in settings",
+        "Use email service (SendGrid, Resend, etc.)",
+        "Unsubscribe link in emails"
+      ]
+    },
+    {
+      "id": "US-038",
+      "title": "Client self-service portal",
+      "priority": 38,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Separate client login at /portal",
+        "Client sees their document checklist",
+        "Upload documents directly",
+        "Track submission status",
+        "Secure messaging with assigned analyst"
+      ]
+    },
+    {
+      "id": "US-039",
+      "title": "Client document requests",
+      "priority": 39,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Analyst creates document request for client",
+        "Client receives email with portal link",
+        "Client uploads requested documents",
+        "Auto-notification to analyst when uploaded",
+        "Track request status: pending, submitted, verified"
+      ]
+    },
+    {
+      "id": "US-040",
+      "title": "REST API for integrations",
+      "priority": 40,
+      "passes": false,
+      "acceptanceCriteria": [
+        "API key management in settings",
+        "Create src/app/api/v1/* endpoints",
+        "Endpoints: clients, cases, documents, transactions",
+        "Rate limiting (100 req/min)",
+        "API documentation with OpenAPI/Swagger",
+        "API keys scoped to organization"
+      ]
+    },
+    {
+      "id": "US-041",
+      "title": "Webhook notifications",
+      "priority": 41,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Configure webhook URLs per tenant",
+        "Events: case.created, case.status_changed, risk_flag.created, document.uploaded",
+        "Send POST with event payload",
+        "Retry failed deliveries (3 attempts)",
+        "Webhook delivery logs"
       ]
     }
   ]
