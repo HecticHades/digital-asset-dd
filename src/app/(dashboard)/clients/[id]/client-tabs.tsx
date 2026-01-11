@@ -1,8 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge, StatusBadge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -152,36 +154,80 @@ export function ClientTabs({ client }: ClientTabsProps) {
             icon={<TransactionIcon />}
           />
         ) : (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Asset</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Source</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {client.transactions.map((tx) => (
-                  <TableRow key={tx.id}>
-                    <TableCell>{format(tx.timestamp, 'MMM d, yyyy HH:mm')}</TableCell>
-                    <TableCell>
-                      <TransactionTypeBadge type={tx.type} />
-                    </TableCell>
-                    <TableCell className="font-medium">{tx.asset}</TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatAmount(tx.amount.toString())}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="default">{formatSource(tx.source)}</Badge>
-                    </TableCell>
+          <div className="space-y-4">
+            {/* Quick Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold text-slate-900">{client.transactions.length}</div>
+                  <p className="text-sm text-slate-500">Total Transactions</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold text-slate-900">
+                    {new Set(client.transactions.map(t => t.asset)).size}
+                  </div>
+                  <p className="text-sm text-slate-500">Unique Assets</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold text-slate-900">
+                    {new Set(client.transactions.filter(t => t.exchange).map(t => t.exchange)).size || '-'}
+                  </div>
+                  <p className="text-sm text-slate-500">Exchanges</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Transactions Preview */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">Recent Transactions</CardTitle>
+                <Link href={`/clients/${client.id}/transactions`}>
+                  <Button variant="outline" size="sm">
+                    View All Transactions
+                  </Button>
+                </Link>
+              </CardHeader>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Asset</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Source</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
+                </TableHeader>
+                <TableBody>
+                  {client.transactions.slice(0, 10).map((tx) => (
+                    <TableRow key={tx.id}>
+                      <TableCell>{format(tx.timestamp, 'MMM d, yyyy HH:mm')}</TableCell>
+                      <TableCell>
+                        <TransactionTypeBadge type={tx.type} />
+                      </TableCell>
+                      <TableCell className="font-medium">{tx.asset}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatAmount(tx.amount.toString())}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="default">{formatSource(tx.source)}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {client.transactions.length > 10 && (
+                <div className="p-4 text-center border-t border-slate-200">
+                  <Link href={`/clients/${client.id}/transactions`} className="text-sm text-primary-600 hover:text-primary-700">
+                    View all {client.transactions.length} transactions with filters and sorting
+                  </Link>
+                </div>
+              )}
+            </Card>
+          </div>
         )}
       </TabsContent>
 
