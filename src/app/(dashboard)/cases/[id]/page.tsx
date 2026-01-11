@@ -100,6 +100,14 @@ async function getCase(id: string) {
           },
         },
         reports: {
+          include: {
+            generatedBy: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
           orderBy: {
             version: 'desc',
           },
@@ -202,6 +210,7 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
       ...r,
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
+      generatedBy: r.generatedBy,
     })),
   }
 

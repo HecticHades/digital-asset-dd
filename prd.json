@@ -301,7 +301,7 @@
       "id": "US-028",
       "title": "Report versioning",
       "priority": 23,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Track report versions (v1, v2, etc.)",
         "Store each generated report as separate record",
