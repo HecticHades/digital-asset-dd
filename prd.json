@@ -219,7 +219,7 @@
       "id": "US-017",
       "title": "On-chain address risk screening",
       "priority": 17,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/lib/screening/sanctions.ts with OFAC list check",
         "Detect known mixer addresses (Tornado Cash contracts)",
