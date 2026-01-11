@@ -400,7 +400,7 @@
       "id": "US-021",
       "title": "DEX transaction detection",
       "priority": 30,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/lib/analyzers/dex.ts",
         "Identify DEX swaps from on-chain data (Uniswap, SushiSwap, etc.)",
