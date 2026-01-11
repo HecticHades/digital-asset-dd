@@ -465,7 +465,7 @@
       "id": "US-035",
       "title": "Manager dashboard",
       "priority": 35,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create manager-specific dashboard view",
         "Show all analysts' workload (cases per analyst)",

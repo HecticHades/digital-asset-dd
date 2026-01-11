@@ -14,6 +14,9 @@ interface RoutePermission {
 
 // Routes that require specific roles
 const PROTECTED_ROUTES: RoutePermission[] = [
+  // Manager dashboard - only Managers and Admins can access
+  { pattern: /^\/manager/, roles: ['ADMIN', 'MANAGER'] },
+
   // Review page - only Compliance Officers and Admins can access
   { pattern: /^\/cases\/review$/, roles: ['ADMIN', 'COMPLIANCE_OFFICER'] },
 
