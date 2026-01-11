@@ -112,7 +112,7 @@
       "id": "US-009",
       "title": "Create transaction list view",
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Display transactions for a client in sortable table",
         "Filter by: type, asset, date range, source (CEX/on-chain)",
