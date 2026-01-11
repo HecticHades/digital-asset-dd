@@ -15,28 +15,29 @@
     "ralph": "bash scripts/ralph/ralph.sh"
   },
   "dependencies": {
+    "@prisma/client": "^5.15.0",
+    "@react-pdf/renderer": "^4.3.2",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
     "next": "^14.2.0",
+    "papaparse": "^5.4.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "@prisma/client": "^5.15.0",
-    "zod": "^3.23.0",
-    "papaparse": "^5.4.1",
-    "date-fns": "^3.6.0",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^2.3.0"
+    "tailwind-merge": "^2.3.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
+    "@types/papaparse": "^5.3.14",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
-    "@types/papaparse": "^5.3.14",
-    "typescript": "^5.4.0",
-    "prisma": "^5.15.0",
-    "tailwindcss": "^3.4.0",
-    "postcss": "^8.4.0",
     "autoprefixer": "^10.4.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
+    "postcss": "^8.4.0",
+    "prisma": "^5.15.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.4.0",
     "vitest": "^1.6.0"
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -68,6 +69,7 @@ interface Report {
   id: string
   version: number
   filename: string
+  size: number
   isLocked: boolean
   createdAt: string
 }
@@ -195,9 +197,12 @@ export function CaseTabs({
   onReopenRejectedCase,
   onMarkCaseCompleted,
 }: CaseTabsProps) {
+  const router = useRouter()
   const [showApprovalModal, setShowApprovalModal] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false)
+  const [reportError, setReportError] = useState<string | null>(null)
 
   const openFindingsCount = caseData.findings.filter((f) => !f.isResolved).length
   const checklistComplete = checklistCompletionStatus.isComplete
@@ -235,6 +240,37 @@ export function CaseTabs({
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const handleGenerateReport = async () => {
+    setIsGeneratingReport(true)
+    setReportError(null)
+    try {
+      const response = await fetch(`/api/reports/${caseData.id}`, {
+        method: 'POST',
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setReportError(data.error || 'Failed to generate report')
+      } else {
+        // Refresh the page to show new report
+        router.refresh()
+      }
+    } catch {
+      setReportError('An unexpected error occurred')
+    } finally {
+      setIsGeneratingReport(false)
+    }
+  }
+
+  const handleDownloadReport = (reportId: string) => {
+    window.open(`/api/reports/${caseData.id}/download/${reportId}`, '_blank')
+  }
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
 
   // Prepare case data for approval modal
@@ -447,62 +483,121 @@ export function CaseTabs({
       </TabsContent>
 
       <TabsContent value="reports">
-        {caseData.reports.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
-            <svg
-              className="mx-auto h-12 w-12 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <h3 className="mt-4 text-lg font-medium text-slate-900">No reports generated</h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Reports will appear here once they are generated.
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg border border-slate-200">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Version</TableHead>
-                  <TableHead>Filename</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Generated</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {caseData.reports.map((report) => (
-                  <TableRow key={report.id}>
-                    <TableCell className="font-medium">v{report.version}</TableCell>
-                    <TableCell>{report.filename}</TableCell>
-                    <TableCell>
-                      {report.isLocked ? (
-                        <Badge variant="success">Final</Badge>
-                      ) : (
-                        <Badge variant="default">Draft</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>{format(new Date(report.createdAt), 'MMM d, yyyy')}</TableCell>
-                    <TableCell className="text-right">
-                      <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                        Download
-                      </button>
-                    </TableCell>
+        <div className="space-y-6">
+          {/* Generate Report Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate Report</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-slate-600 mb-2">
+                    Generate a comprehensive PDF due diligence report for this case.
+                    The report includes all findings, risk assessment, client profile,
+                    transaction analysis, and recommendations.
+                  </p>
+                  {caseData.reports.length > 0 && (
+                    <p className="text-xs text-slate-500">
+                      Generating a new report will create version {caseData.reports[0].version + 1}.
+                    </p>
+                  )}
+                </div>
+                <Button
+                  variant="primary"
+                  onClick={handleGenerateReport}
+                  disabled={isGeneratingReport}
+                >
+                  {isGeneratingReport ? (
+                    <>
+                      <LoadingSpinner className="mr-2 h-4 w-4" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <DocumentPlusIcon className="mr-2 h-4 w-4" />
+                      Generate Report
+                    </>
+                  )}
+                </Button>
+              </div>
+              {reportError && (
+                <div className="mt-3 bg-red-50 text-red-700 px-3 py-2 rounded-md text-sm">
+                  {reportError}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Report History */}
+          {caseData.reports.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
+              <svg
+                className="mx-auto h-12 w-12 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <h3 className="mt-4 text-lg font-medium text-slate-900">No reports generated yet</h3>
+              <p className="mt-2 text-sm text-slate-500">
+                Click &quot;Generate Report&quot; to create your first report.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg border border-slate-200">
+              <div className="px-4 py-3 border-b border-slate-200">
+                <h3 className="font-medium text-slate-900">Report History</h3>
+                <p className="text-sm text-slate-500">{caseData.reports.length} report(s) generated</p>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Filename</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Generated</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+                </TableHeader>
+                <TableBody>
+                  {caseData.reports.map((report) => (
+                    <TableRow key={report.id}>
+                      <TableCell className="font-medium">v{report.version}</TableCell>
+                      <TableCell className="text-sm">{report.filename}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatFileSize(report.size)}</TableCell>
+                      <TableCell>
+                        {report.isLocked ? (
+                          <Badge variant="success">Final</Badge>
+                        ) : (
+                          <Badge variant="default">Draft</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm">{format(new Date(report.createdAt), 'MMM d, yyyy h:mm a')}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadReport(report.id)}
+                        >
+                          <DownloadIcon className="h-4 w-4 mr-1" />
+                          Download
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
       </TabsContent>
 
       <TabsContent value="timeline">
@@ -565,6 +660,31 @@ function XCircleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  )
+}
+
+function DocumentPlusIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  )
+}
+
+function DownloadIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+  )
+}
+
+function LoadingSpinner({ className }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className}`} fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
     </svg>
   )
 }
