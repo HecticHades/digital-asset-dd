@@ -10,6 +10,7 @@ import { format } from 'date-fns'
 import type { Blockchain } from '@prisma/client'
 import { WalletBalanceCard } from './wallet-balance-card'
 import { WalletRiskFlagsWrapper } from './wallet-risk-flags-wrapper'
+import { DEXActivityView } from '@/components/dex/dex-activity-view'
 
 interface WalletPageProps {
   params: Promise<{
@@ -220,6 +221,20 @@ export default async function WalletPage({ params }: WalletPageProps) {
           />
         </div>
       </div>
+
+      {/* DEX Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle>DEX Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DEXActivityView
+            walletId={wallet.id}
+            walletAddress={wallet.address}
+            blockchain={wallet.blockchain}
+          />
+        </CardContent>
+      </Card>
     </div>
   )
 }
