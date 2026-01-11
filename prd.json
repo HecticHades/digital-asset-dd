@@ -286,7 +286,7 @@
       "id": "US-027",
       "title": "PDF report generation",
       "priority": 22,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/app/api/reports/[caseId]/route.ts",
         "Generate PDF using @react-pdf/renderer or puppeteer",
