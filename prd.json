@@ -58,7 +58,7 @@
       "id": "US-005",
       "title": "Create client list and add form",
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/app/(dashboard)/clients/page.tsx with client table",
         "Table columns: name, email, status, risk level, created date, actions",
