@@ -358,7 +358,7 @@
       "id": "US-018",
       "title": "CEX API integration",
       "priority": 27,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/lib/exchanges/binance-api.ts",
         "Create src/lib/exchanges/coinbase-api.ts",
