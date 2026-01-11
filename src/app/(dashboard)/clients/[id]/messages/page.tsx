@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { StaffMessagesView } from './staff-messages-view'
 
+export const dynamic = 'force-dynamic'
+
 // Temp org ID for development
 const TEMP_ORG_ID = 'temp-org-id'
 

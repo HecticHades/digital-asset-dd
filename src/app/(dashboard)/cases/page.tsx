@@ -13,6 +13,8 @@ import {
 import { format } from 'date-fns'
 import { CaseFilters } from './case-filters'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
 

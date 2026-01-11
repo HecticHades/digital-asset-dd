@@ -10,6 +10,8 @@ import { getDocumentChecklistStatus } from './documents/actions'
 import { getExchangeConnections } from './exchanges/actions'
 import { getDocumentRequests } from './document-requests/actions'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
 

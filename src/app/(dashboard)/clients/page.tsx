@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/table'
 import { format } from 'date-fns'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
 

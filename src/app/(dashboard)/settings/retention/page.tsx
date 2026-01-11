@@ -8,6 +8,8 @@ import { ArchivedCasesTable } from './archived-cases-table'
 import { DeletionLogsTable } from './deletion-logs-table'
 import { getArchivedCasesAction, getDeletionLogsAction } from './actions'
 
+export const dynamic = 'force-dynamic'
+
 export default async function RetentionSettingsPage() {
   const session = await getServerSession(authOptions)
 

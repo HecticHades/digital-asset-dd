@@ -6,6 +6,8 @@ import { DocumentType, DocumentStatus, DocumentRequestStatus } from '@prisma/cli
 import { PortalDashboard } from './portal-dashboard'
 import { getClientPendingRequests } from '@/app/(dashboard)/clients/[id]/document-requests/actions'
 
+export const dynamic = 'force-dynamic'
+
 // Required document types for clients
 const REQUIRED_DOCUMENTS: DocumentType[] = [
   'ID',

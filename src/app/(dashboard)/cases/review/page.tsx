@@ -6,6 +6,8 @@ import { format } from 'date-fns'
 import { PendingCaseCard } from './pending-case-card'
 import { processCaseApproval } from '../actions'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
 

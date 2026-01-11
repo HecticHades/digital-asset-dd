@@ -12,6 +12,8 @@ import { WalletBalanceCard } from './wallet-balance-card'
 import { WalletRiskFlagsWrapper } from './wallet-risk-flags-wrapper'
 import { DEXActivityView } from '@/components/dex/dex-activity-view'
 
+export const dynamic = 'force-dynamic'
+
 interface WalletPageProps {
   params: Promise<{
     id: string

@@ -6,6 +6,8 @@ import { getOrganization, getOrganizationStats } from '@/lib/organization'
 import { OrganizationSettingsForm } from './organization-settings-form'
 import { ComplianceTemplatesList } from './compliance-templates-list'
 
+export const dynamic = 'force-dynamic'
+
 export default async function OrganizationSettingsPage() {
   const session = await getServerSession(authOptions)
 

@@ -22,6 +22,8 @@ import type { FindingSeverity, FindingCategory } from '@/lib/validators/finding'
 import type { ChecklistCompletionStatus } from '@/lib/validators/checklist'
 import type { CaseStatus } from '@prisma/client'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
 

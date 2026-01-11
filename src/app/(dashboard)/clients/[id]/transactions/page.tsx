@@ -1,10 +1,10 @@
-'use server'
-
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { TransactionList } from './transaction-list'
 import type { Prisma, TransactionType, TransactionSource } from '@prisma/client'
+
+export const dynamic = 'force-dynamic'
 
 // TEMP: Using a hardcoded org ID until auth is implemented
 const TEMP_ORG_ID = 'temp-org-id'

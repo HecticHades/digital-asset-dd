@@ -4,6 +4,8 @@ import { portalAuthOptions } from '@/lib/portal-auth'
 import { prisma } from '@/lib/db'
 import { MessagesView } from './messages-view'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PortalMessagesPage() {
   const session = await getServerSession(portalAuthOptions)
 

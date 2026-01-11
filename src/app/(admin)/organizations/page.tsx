@@ -6,6 +6,8 @@ import { isSuperAdmin, listOrganizations } from '@/lib/organization'
 import { OrganizationsTable } from './organizations-table'
 import { CreateOrganizationForm } from './create-organization-form'
 
+export const dynamic = 'force-dynamic'
+
 export default async function OrganizationsPage() {
   const session = await getServerSession(authOptions)
 

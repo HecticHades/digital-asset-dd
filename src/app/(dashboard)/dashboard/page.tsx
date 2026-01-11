@@ -7,6 +7,8 @@ import { format } from 'date-fns'
 import { CaseStatus, FindingSeverity } from '@prisma/client'
 import { CasesByStatusChart } from './cases-by-status-chart'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
 
