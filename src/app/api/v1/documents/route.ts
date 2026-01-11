@@ -4,6 +4,8 @@ import { Prisma } from '@prisma/client'
 import { withApiAuth, createApiResponse, createApiErrorResponse, type ApiListResponse } from '@/lib/api/auth'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 // Response type for document
 interface DocumentResponse {
   id: string

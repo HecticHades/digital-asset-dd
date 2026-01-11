@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { getNotifications, markAllAsRead, getUnreadCount } from '@/lib/notifications'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/notifications - Get notifications for current user
 export async function GET(request: NextRequest) {
   try {

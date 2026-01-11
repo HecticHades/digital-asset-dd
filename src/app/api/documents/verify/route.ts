@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { DocumentStatus } from '@prisma/client'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Replace with actual user from session once auth is implemented
 const TEMP_USER_ID = 'temp-user-id'
 

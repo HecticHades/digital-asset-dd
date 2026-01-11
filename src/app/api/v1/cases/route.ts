@@ -4,6 +4,8 @@ import { Prisma } from '@prisma/client'
 import { withApiAuth, createApiResponse, createApiErrorResponse, type ApiListResponse, type ApiItemResponse } from '@/lib/api/auth'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 // Response type for case
 interface CaseResponse {
   id: string

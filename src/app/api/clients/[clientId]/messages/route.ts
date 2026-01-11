@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 // Temp org ID for development
 const TEMP_ORG_ID = 'temp-org-id'
 

@@ -15,6 +15,8 @@ import { prisma } from '@/lib/db'
 import { screenAddress, screenTransaction } from '@/lib/screening/sanctions'
 import type { Blockchain, FindingSeverity, FindingCategory } from '@prisma/client'
 
+export const dynamic = 'force-dynamic'
+
 // Temporary organization ID until auth is implemented
 const TEMP_ORG_ID = 'temp-org-id'
 

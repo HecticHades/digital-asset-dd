@@ -5,6 +5,8 @@ import type { TransactionType, TransactionSource, Blockchain } from '@prisma/cli
 import type { ParsedTransaction, ParsedTransactionType } from '@/types/transaction'
 import { Prisma } from '@prisma/client'
 
+export const dynamic = 'force-dynamic'
+
 // Temporary org ID until auth is implemented
 const TEMP_ORG_ID = 'temp-org-id'
 

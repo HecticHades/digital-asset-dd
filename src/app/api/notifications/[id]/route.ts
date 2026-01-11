@@ -3,6 +3,8 @@ import { getToken } from 'next-auth/jwt'
 import { markAsRead } from '@/lib/notifications'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 // PATCH /api/notifications/[id] - Mark notification as read
 export async function PATCH(
   request: NextRequest,

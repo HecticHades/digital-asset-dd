@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 // GET - Fetch messages for the portal user
 export async function GET(request: NextRequest) {
   try {

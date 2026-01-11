@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { resetPassword } from '@/lib/password-reset'
 
+export const dynamic = 'force-dynamic'
+
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Token is required'),
   password: z.string().min(8, 'Password must be at least 8 characters'),

@@ -13,6 +13,8 @@ import {
   type TransactionInput,
 } from '@/lib/analyzers/gains'
 
+export const dynamic = 'force-dynamic'
+
 // Temporary org ID for development
 const TEMP_ORG_ID = 'temp-org-id'
 

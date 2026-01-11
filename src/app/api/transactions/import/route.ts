@@ -4,6 +4,8 @@ import { z } from 'zod'
 import type { ParsedTransactionType } from '@/types/transaction'
 import { TransactionType, TransactionSource, Prisma } from '@prisma/client'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual user/org from session
 const TEMP_ORG_ID = 'temp-org-id'
 

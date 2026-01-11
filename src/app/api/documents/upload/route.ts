@@ -6,6 +6,8 @@ import { join } from 'path'
 import { randomUUID } from 'crypto'
 import { dispatchDocumentUploaded } from '@/lib/webhooks'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual user/org from session
 const TEMP_ORG_ID = 'temp-org-id'
 

@@ -8,6 +8,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 // Temporary org ID for development
 const TEMP_ORG_ID = 'temp-org-id'
 

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * OpenAPI 3.0 Specification for the Digital Asset Due Diligence API
  */

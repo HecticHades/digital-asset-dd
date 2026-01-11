@@ -15,6 +15,8 @@ import { existsSync } from 'fs'
 import path from 'path'
 import React from 'react'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual org and user from session
 const TEMP_ORG_ID = 'temp-org-id'
 const TEMP_USER_ID = 'temp-user-id'

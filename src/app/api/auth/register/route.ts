@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { acceptInvitation } from '@/lib/invitations'
 
+export const dynamic = 'force-dynamic'
+
 const registerSchema = z.object({
   token: z.string().min(1, 'Token is required'),
   name: z.string().min(1, 'Name is required'),

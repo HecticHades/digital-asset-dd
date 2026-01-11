@@ -7,6 +7,8 @@ import {
 } from '@/lib/email'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
 // POST /api/email/digest - Send digest emails

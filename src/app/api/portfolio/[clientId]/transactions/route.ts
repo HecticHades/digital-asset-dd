@@ -9,6 +9,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import type { TransactionInput } from '@/lib/analyzers/gains'
 
+export const dynamic = 'force-dynamic'
+
 // Temporary org ID for development
 const TEMP_ORG_ID = 'temp-org-id'
 

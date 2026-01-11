@@ -3,6 +3,8 @@ import { getToken } from 'next-auth/jwt'
 import { prisma } from '@/lib/db'
 import { sendEmail, isEmailConfigured } from '@/lib/email'
 
+export const dynamic = 'force-dynamic'
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
 // POST /api/email/test - Send a test email to the current user

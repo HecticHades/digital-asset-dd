@@ -7,6 +7,8 @@ import { join } from 'path'
 import { randomUUID } from 'crypto'
 import { sendDocumentSubmittedNotification } from '@/lib/email/document-request'
 
+export const dynamic = 'force-dynamic'
+
 // Allowed MIME types
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB

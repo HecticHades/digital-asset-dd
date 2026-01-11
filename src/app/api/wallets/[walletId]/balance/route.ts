@@ -7,6 +7,8 @@ import {
 } from '@/lib/blockchain'
 import type { ParsedTransaction } from '@/types/transaction'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ walletId: string }> }

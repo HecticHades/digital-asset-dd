@@ -10,6 +10,8 @@ import { readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
 

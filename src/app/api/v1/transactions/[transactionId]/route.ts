@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withApiAuth, createApiResponse, createApiErrorResponse, type ApiItemResponse } from '@/lib/api/auth'
 
+export const dynamic = 'force-dynamic'
+
 // Response type for transaction detail
 interface TransactionDetailResponse {
   id: string

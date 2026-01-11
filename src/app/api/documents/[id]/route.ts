@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 
+export const dynamic = 'force-dynamic'
+
 // TODO: Get actual user/org from session
 const TEMP_ORG_ID = 'temp-org-id'
 
