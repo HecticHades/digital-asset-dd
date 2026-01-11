@@ -125,7 +125,7 @@
       "id": "US-010",
       "title": "Create case management",
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/app/(dashboard)/cases/page.tsx with case list",
         "Filter by status, assignee, risk level",
