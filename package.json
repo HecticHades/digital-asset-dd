@@ -12,6 +12,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
+    "db:seed": "npx tsx prisma/seed.ts",
     "ralph": "bash scripts/ralph/ralph.sh"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "postcss": "^8.4.0",
     "prisma": "^5.15.0",
     "tailwindcss": "^3.4.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
   }
