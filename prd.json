@@ -517,7 +517,7 @@
       "id": "US-039",
       "title": "Client document requests",
       "priority": 39,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Analyst creates document request for client",
         "Client receives email with portal link",
