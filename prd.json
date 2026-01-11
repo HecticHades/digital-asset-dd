@@ -273,7 +273,7 @@
       "id": "US-026",
       "title": "Report template structure",
       "priority": 21,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/lib/reports/template.ts defining report structure",
         "Sections: Cover, TOC, Executive Summary, Client Profile, Portfolio Summary, CEX Analysis, On-chain Analysis, Risk Assessment, Conclusion, Appendices",
