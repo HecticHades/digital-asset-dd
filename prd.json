@@ -387,7 +387,7 @@
       "id": "US-020",
       "title": "CEX portfolio snapshot",
       "priority": 29,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Show current holdings across all connected exchanges",
         "Historical balance at any selected date",
