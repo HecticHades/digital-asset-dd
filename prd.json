@@ -1,0 +1,151 @@
+{
+  "project": "Digital Asset Due Diligence Tool",
+  "description": "Banking client onboarding tool for digital asset wealth verification",
+  "branchName": "ralph/initial-build",
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Initialize Next.js app structure",
+      "priority": 1,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create tsconfig.json, next.config.js, tailwind.config.ts, postcss.config.js",
+        "Create src/app/layout.tsx and src/app/globals.css",
+        "Create src/app/page.tsx with landing content",
+        "Create .gitignore and .env.example"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Set up Prisma database schema",
+      "priority": 2,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create prisma/schema.prisma with models: Client, Case, Wallet, Transaction, Document",
+        "Include proper enums for status, risk levels, transaction types",
+        "Create src/lib/db.ts with Prisma client singleton"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Create base UI components",
+      "priority": 3,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/components/ui/button.tsx with variants",
+        "Create src/components/ui/input.tsx",
+        "Create src/components/ui/card.tsx",
+        "Create src/components/ui/badge.tsx for status/risk display"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Create dashboard layout",
+      "priority": 4,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/components/layout/sidebar.tsx with nav links",
+        "Create src/components/layout/header.tsx",
+        "Create src/app/(dashboard)/layout.tsx",
+        "Navigation: Dashboard, Clients, Cases, Reports"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "Create client list and add form",
+      "priority": 5,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/app/(dashboard)/clients/page.tsx with client table",
+        "Create src/app/(dashboard)/clients/new/page.tsx with form",
+        "Fields: name, email, phone, notes",
+        "Create server action to save client"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "Create client detail page",
+      "priority": 6,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/app/(dashboard)/clients/[id]/page.tsx",
+        "Show client info, wallets, documents tabs",
+        "Add wallet form (address, blockchain, label)",
+        "List client's wallets"
+      ]
+    },
+    {
+      "id": "US-007",
+      "title": "Create CEX parsers for Binance, Coinbase, Kraken",
+      "priority": 7,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/lib/parsers/binance.ts",
+        "Create src/lib/parsers/coinbase.ts",
+        "Create src/lib/parsers/kraken.ts",
+        "Each parser normalizes to standard Transaction format",
+        "Auto-detect exchange from CSV headers"
+      ]
+    },
+    {
+      "id": "US-008",
+      "title": "Create CEX upload component",
+      "priority": 8,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/components/uploads/cex-upload.tsx",
+        "Drag-and-drop CSV upload",
+        "Preview parsed transactions",
+        "Save to database linked to client"
+      ]
+    },
+    {
+      "id": "US-009",
+      "title": "Create transaction list view",
+      "priority": 9,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Display transactions for a client",
+        "Filter by type, asset, date range",
+        "Sort by columns",
+        "Show summary stats"
+      ]
+    },
+    {
+      "id": "US-010",
+      "title": "Create case management",
+      "priority": 10,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/app/(dashboard)/cases/page.tsx with list",
+        "Create src/app/(dashboard)/cases/new/page.tsx",
+        "Case links to client, has status and risk level",
+        "Create src/app/(dashboard)/cases/[id]/page.tsx detail view"
+      ]
+    },
+    {
+      "id": "US-011",
+      "title": "Create risk scoring system",
+      "priority": 11,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/lib/analyzers/risk.ts",
+        "Calculate risk score 0-100 based on transaction patterns",
+        "Display risk breakdown on case page",
+        "Flag high-risk indicators"
+      ]
+    },
+    {
+      "id": "US-012",
+      "title": "Create dashboard overview",
+      "priority": 12,
+      "passes": false,
+      "acceptanceCriteria": [
+        "Create src/app/(dashboard)/dashboard/page.tsx",
+        "Show stats: total clients, active cases, pending reviews",
+        "Recent activity list",
+        "Quick action buttons"
+      ]
+    }
+  ]
+}
