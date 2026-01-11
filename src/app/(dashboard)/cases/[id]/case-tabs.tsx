@@ -14,8 +14,10 @@ import {
 import { format } from 'date-fns'
 import { RiskBreakdown } from '@/components/risk/risk-breakdown'
 import { FindingsList } from '@/components/findings/findings-list'
+import { ComplianceChecklist } from '@/components/checklist/compliance-checklist'
 import type { RiskBreakdown as RiskBreakdownType } from '@/lib/analyzers/risk'
 import type { FindingSeverity, FindingCategory } from '@/lib/validators/finding'
+import type { ChecklistCompletionStatus } from '@/lib/validators/checklist'
 
 interface Finding {
   id: string
@@ -53,6 +55,10 @@ interface ChecklistItem {
   isCompleted: boolean
   notes: string | null
   completedAt: string | null
+  completedBy?: {
+    id: string
+    name: string
+  } | null
 }
 
 interface Report {
@@ -100,6 +106,7 @@ interface CaseTabsProps {
   caseData: CaseData
   timeline: TimelineEvent[]
   riskBreakdown: RiskBreakdownType
+  checklistCompletionStatus: ChecklistCompletionStatus
   onCreateFinding: (data: {
     title: string
     description?: string
@@ -109,6 +116,12 @@ interface CaseTabsProps {
   }) => Promise<{ success: boolean; error?: string }>
   onResolveFinding: (id: string, resolution: string) => Promise<{ success: boolean; error?: string }>
   onReopenFinding: (id: string) => Promise<{ success: boolean; error?: string }>
+  onInitializeChecklist: () => Promise<{ success: boolean; error?: string }>
+  onCompleteChecklistItem: (itemId: string, notes?: string) => Promise<{ success: boolean; error?: string }>
+  onUncompleteChecklistItem: (itemId: string) => Promise<{ success: boolean; error?: string }>
+  onAddChecklistItem: (data: { title: string; description?: string; isRequired: boolean }) => Promise<{ success: boolean; error?: string }>
+  onDeleteChecklistItem: (itemId: string) => Promise<{ success: boolean; error?: string }>
+  onSubmitForReview: () => Promise<{ success: boolean; error?: string }>
 }
 
 function getTimelineIcon(type: string) {
@@ -160,11 +173,19 @@ export function CaseTabs({
   caseData,
   timeline,
   riskBreakdown,
+  checklistCompletionStatus,
   onCreateFinding,
   onResolveFinding,
   onReopenFinding,
+  onInitializeChecklist,
+  onCompleteChecklistItem,
+  onUncompleteChecklistItem,
+  onAddChecklistItem,
+  onDeleteChecklistItem,
+  onSubmitForReview,
 }: CaseTabsProps) {
   const openFindingsCount = caseData.findings.filter((f) => !f.isResolved).length
+  const checklistComplete = checklistCompletionStatus.isComplete
 
   return (
     <Tabs defaultValue="overview">
@@ -175,7 +196,14 @@ export function CaseTabs({
           Findings ({openFindingsCount}
           {caseData.findings.length > openFindingsCount && ` / ${caseData.findings.length}`})
         </TabsTrigger>
-        <TabsTrigger value="checklist">Checklist</TabsTrigger>
+        <TabsTrigger value="checklist">
+          Checklist ({checklistCompletionStatus.completed}/{checklistCompletionStatus.total})
+          {checklistComplete && (
+            <svg className="ml-1 h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          )}
+        </TabsTrigger>
         <TabsTrigger value="reports">Reports ({caseData.reports.length})</TabsTrigger>
         <TabsTrigger value="timeline">Timeline</TabsTrigger>
       </TabsList>
@@ -243,67 +271,18 @@ export function CaseTabs({
       </TabsContent>
 
       <TabsContent value="checklist">
-        {caseData.checklistItems.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
-            <svg
-              className="mx-auto h-12 w-12 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-              />
-            </svg>
-            <h3 className="mt-4 text-lg font-medium text-slate-900">No checklist items</h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Checklist items will be added when compliance review begins.
-            </p>
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="pt-6">
-              <ul className="space-y-4">
-                {caseData.checklistItems.map((item) => (
-                  <li key={item.id} className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 mt-0.5 ${item.isCompleted ? 'text-green-600' : 'text-slate-300'}`}>
-                      {item.isCompleted ? (
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="10" strokeWidth={2} />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`font-medium ${item.isCompleted ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
-                          {item.title}
-                        </span>
-                        {item.isRequired && (
-                          <Badge variant="default">Required</Badge>
-                        )}
-                      </div>
-                      {item.description && (
-                        <p className="mt-1 text-sm text-slate-500">{item.description}</p>
-                      )}
-                      {item.completedAt && (
-                        <p className="mt-1 text-xs text-slate-400">
-                          Completed on {format(new Date(item.completedAt), 'MMM d, yyyy')}
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
+        <ComplianceChecklist
+          items={caseData.checklistItems}
+          caseId={caseData.id}
+          caseStatus={caseData.status}
+          completionStatus={checklistCompletionStatus}
+          onInitialize={onInitializeChecklist}
+          onComplete={onCompleteChecklistItem}
+          onUncomplete={onUncompleteChecklistItem}
+          onAddItem={onAddChecklistItem}
+          onDeleteItem={onDeleteChecklistItem}
+          onSubmitForReview={onSubmitForReview}
+        />
       </TabsContent>
 
       <TabsContent value="reports">

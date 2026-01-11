@@ -8,7 +8,16 @@ import { format } from 'date-fns'
 import { CaseTabs } from './case-tabs'
 import { calculateRiskBreakdown, getRiskScoreColor } from '@/lib/analyzers/risk'
 import { createFinding, resolveFinding, reopenFinding } from './findings/actions'
+import {
+  initializeChecklist,
+  completeChecklistItem,
+  uncompleteChecklistItem,
+  createChecklistItem,
+  deleteChecklistItem,
+} from './checklist/actions'
+import { updateCase } from '../actions'
 import type { FindingSeverity, FindingCategory } from '@/lib/validators/finding'
+import type { ChecklistCompletionStatus } from '@/lib/validators/checklist'
 
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
@@ -78,6 +87,14 @@ async function getCase(id: string) {
           ],
         },
         checklistItems: {
+          include: {
+            completedBy: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
           orderBy: {
             order: 'asc',
           },
@@ -142,6 +159,20 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
     }))
   )
 
+  // Calculate checklist completion status
+  const checklistItems = caseData.checklistItems
+  const requiredItems = checklistItems.filter((i) => i.isRequired)
+  const checklistCompletionStatus: ChecklistCompletionStatus = {
+    total: checklistItems.length,
+    completed: checklistItems.filter((i) => i.isCompleted).length,
+    required: requiredItems.length,
+    requiredCompleted: requiredItems.filter((i) => i.isCompleted).length,
+    percentage: checklistItems.length > 0 ? Math.round((checklistItems.filter((i) => i.isCompleted).length / checklistItems.length) * 100) : 0,
+    requiredPercentage: requiredItems.length > 0 ? Math.round((requiredItems.filter((i) => i.isCompleted).length / requiredItems.length) * 100) : 100,
+    isComplete: requiredItems.every((i) => i.isCompleted),
+    missingRequired: requiredItems.filter((i) => !i.isCompleted).map((i) => i.title),
+  }
+
   // Serialize for client components
   const serializedCase = {
     ...caseData,
@@ -165,6 +196,7 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
       createdAt: c.createdAt.toISOString(),
       updatedAt: c.updatedAt.toISOString(),
       completedAt: c.completedAt?.toISOString() || null,
+      completedBy: c.completedBy,
     })),
     reports: caseData.reports.map((r) => ({
       ...r,
@@ -316,6 +348,7 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
         caseData={serializedCase}
         timeline={serializedTimeline}
         riskBreakdown={riskBreakdown}
+        checklistCompletionStatus={checklistCompletionStatus}
         onCreateFinding={async (data: {
           title: string
           description?: string
@@ -333,6 +366,43 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
         onReopenFinding={async (findingId: string) => {
           'use server'
           return reopenFinding(findingId)
+        }}
+        onInitializeChecklist={async () => {
+          'use server'
+          return initializeChecklist(id)
+        }}
+        onCompleteChecklistItem={async (itemId: string, notes?: string) => {
+          'use server'
+          return completeChecklistItem(itemId, notes ? { notes } : undefined)
+        }}
+        onUncompleteChecklistItem={async (itemId: string) => {
+          'use server'
+          return uncompleteChecklistItem(itemId)
+        }}
+        onAddChecklistItem={async (data: { title: string; description?: string; isRequired: boolean }) => {
+          'use server'
+          const nextOrder = checklistItems.length
+          return createChecklistItem({
+            caseId: id,
+            title: data.title,
+            description: data.description,
+            isRequired: data.isRequired,
+            order: nextOrder,
+          })
+        }}
+        onDeleteChecklistItem={async (itemId: string) => {
+          'use server'
+          return deleteChecklistItem(itemId)
+        }}
+        onSubmitForReview={async () => {
+          'use server'
+          // Check if all required items are complete
+          const required = checklistItems.filter((i) => i.isRequired)
+          const allComplete = required.every((i) => i.isCompleted)
+          if (!allComplete) {
+            return { success: false, error: 'All required checklist items must be completed before submitting for review' }
+          }
+          return updateCase(id, { status: 'PENDING_REVIEW' })
         }}
       />
     </div>
