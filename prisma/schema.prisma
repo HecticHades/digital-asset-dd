@@ -1,0 +1,482 @@
+// Prisma schema for Digital Asset Due Diligence Tool
+// Multi-tenant architecture with row-level isolation via organization_id
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  ANALYST
+  COMPLIANCE_OFFICER
+  AUDITOR
+}
+
+enum ClientStatus {
+  PENDING
+  IN_PROGRESS
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum CaseStatus {
+  DRAFT
+  IN_PROGRESS
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  COMPLETED
+  ARCHIVED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+  UNASSESSED
+}
+
+enum TransactionType {
+  BUY
+  SELL
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  SWAP
+  STAKE
+  UNSTAKE
+  REWARD
+  FEE
+  OTHER
+}
+
+enum TransactionSource {
+  CEX_IMPORT
+  ON_CHAIN
+  API_SYNC
+  MANUAL
+}
+
+enum DocumentType {
+  ID
+  PROOF_OF_ADDRESS
+  TAX_RETURNS
+  BANK_STATEMENTS
+  SOURCE_OF_WEALTH
+  SOURCE_OF_FUNDS
+  EXCHANGE_STATEMENTS
+  WALLET_PROOF
+  OTHER
+}
+
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum Blockchain {
+  ETHEREUM
+  BITCOIN
+  POLYGON
+  ARBITRUM
+  OPTIMISM
+  BSC
+  AVALANCHE
+  SOLANA
+  OTHER
+}
+
+enum FindingSeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum FindingCategory {
+  SANCTIONS
+  MIXER
+  SOURCE
+  JURISDICTION
+  BEHAVIOR
+  PRIVACY
+  MARKET
+  OTHER
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  logo      String?
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users          User[]
+  clients        Client[]
+  cases          Case[]
+  documents      Document[]
+  wallets        Wallet[]
+  transactions   Transaction[]
+  findings       Finding[]
+  checklistItems ChecklistItem[]
+  reports        Report[]
+  auditLogs      AuditLog[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  passwordHash   String
+  role           UserRole  @default(ANALYST)
+  isActive       Boolean   @default(true)
+  failedAttempts Int       @default(0)
+  lockedUntil    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Relations
+  assignedCases        Case[]          @relation("AssignedAnalyst")
+  reviewedCases        Case[]          @relation("ReviewedBy")
+  verifiedDocuments    Document[]      @relation("VerifiedBy")
+  resolvedFindings     Finding[]       @relation("ResolvedBy")
+  completedChecklists  ChecklistItem[] @relation("CompletedBy")
+  generatedReports     Report[]
+  auditLogs            AuditLog[]
+  createdClients       Client[]        @relation("CreatedBy")
+  createdCases         Case[]          @relation("CreatedBy")
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("users")
+}
+
+model Client {
+  id        String       @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  notes     String?
+  status    ClientStatus @default(PENDING)
+  riskLevel RiskLevel    @default(UNASSESSED)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Created by
+  createdById String?
+  createdBy   User?   @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // Relations
+  cases        Case[]
+  wallets      Wallet[]
+  documents    Document[]
+  transactions Transaction[]
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("clients")
+}
+
+model Case {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      CaseStatus @default(DRAFT)
+  riskScore   Int?       // 0-100
+  riskLevel   RiskLevel  @default(UNASSESSED)
+  dueDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Client relation
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Assignment
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedAnalyst", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  // Created by
+  createdById String?
+  createdBy   User?   @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // Review
+  reviewedById String?
+  reviewedBy   User?     @relation("ReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+  reviewNotes  String?
+
+  // Relations
+  findings       Finding[]
+  checklistItems ChecklistItem[]
+  reports        Report[]
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([status])
+  @@map("cases")
+}
+
+model Wallet {
+  id         String     @id @default(cuid())
+  address    String
+  blockchain Blockchain
+  label      String?
+  isVerified Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Client relation
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Verification document
+  proofDocumentId String?
+  proofDocument   Document? @relation("WalletProof", fields: [proofDocumentId], references: [id], onDelete: SetNull)
+
+  // Relations
+  transactions Transaction[]
+  findings     Finding[]
+
+  @@unique([address, blockchain])
+  @@index([organizationId])
+  @@index([clientId])
+  @@map("wallets")
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  timestamp   DateTime
+  type        TransactionType
+  asset       String
+  amount      Decimal           @db.Decimal(30, 18)
+  price       Decimal?          @db.Decimal(30, 18)
+  fee         Decimal?          @db.Decimal(30, 18)
+  value       Decimal?          @db.Decimal(30, 18) // amount * price
+  exchange    String?
+  source      TransactionSource
+  txHash      String?
+  fromAddress String?
+  toAddress   String?
+  rawData     Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Client relation
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Wallet relation (optional, for on-chain txs)
+  walletId String?
+  wallet   Wallet? @relation(fields: [walletId], references: [id], onDelete: SetNull)
+
+  // Relations
+  findings Finding[]
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([walletId])
+  @@index([timestamp])
+  @@index([type])
+  @@map("transactions")
+}
+
+model Document {
+  id           String         @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String
+  category     DocumentType
+  status       DocumentStatus @default(PENDING)
+  notes        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Client relation
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Verification
+  verifiedById String?
+  verifiedBy   User?     @relation("VerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+  verifiedAt   DateTime?
+
+  // Relations
+  walletProofs Wallet[] @relation("WalletProof")
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([category])
+  @@index([status])
+  @@map("documents")
+}
+
+model Finding {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  severity    FindingSeverity @default(MEDIUM)
+  category    FindingCategory
+  isResolved  Boolean         @default(false)
+  resolution  String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Case relation
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  // Optional relations to source
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  walletId String?
+  wallet   Wallet? @relation(fields: [walletId], references: [id], onDelete: SetNull)
+
+  // Resolution
+  resolvedById String?
+  resolvedBy   User?     @relation("ResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt   DateTime?
+
+  @@index([organizationId])
+  @@index([caseId])
+  @@index([severity])
+  @@index([category])
+  @@map("findings")
+}
+
+model ChecklistItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  isRequired  Boolean  @default(true)
+  isCompleted Boolean  @default(false)
+  notes       String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Case relation
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  // Completion
+  completedById String?
+  completedBy   User?     @relation("CompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+  completedAt   DateTime?
+
+  @@index([organizationId])
+  @@index([caseId])
+  @@map("checklist_items")
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  version   Int      @default(1)
+  filename  String
+  path      String
+  size      Int
+  isLocked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Case relation
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  // Generated by
+  generatedById String?
+  generatedBy   User?   @relation(fields: [generatedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([caseId])
+  @@map("reports")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // User who performed action
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([timestamp])
+  @@map("audit_logs")
+}

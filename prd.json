@@ -19,7 +19,7 @@
       "id": "US-002",
       "title": "Set up Prisma database schema",
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create prisma/schema.prisma with models: Organization, User, Client, Case, Wallet, Transaction, Document, Finding, ChecklistItem, Report, AuditLog",
         "Include tenant_id on all tenant-scoped tables",
