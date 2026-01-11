@@ -413,7 +413,7 @@
       "id": "US-022",
       "title": "DEX aggregated view",
       "priority": 31,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Consolidate DEX activity per wallet on client page",
         "Show trading volume by DEX protocol",
