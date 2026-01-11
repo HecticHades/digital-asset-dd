@@ -10,6 +10,7 @@ import {
   type ResolveFindingInput,
 } from '@/lib/validators/finding'
 import { revalidatePath } from 'next/cache'
+import { dispatchRiskFlagCreated } from '@/lib/webhooks'
 
 // TODO: Get actual user/org from session
 const TEMP_ORG_ID = 'temp-org-id'
@@ -31,6 +32,14 @@ export async function createFinding(data: CreateFindingInput) {
       where: {
         id: validated.data.caseId,
         organizationId: TEMP_ORG_ID,
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     })
 
@@ -55,6 +64,20 @@ export async function createFinding(data: CreateFindingInput) {
     })
 
     revalidatePath(`/cases/${validated.data.caseId}`)
+
+    // Dispatch webhook for new risk flag (fire and forget)
+    dispatchRiskFlagCreated({
+      organizationId: TEMP_ORG_ID,
+      caseId: caseData.id,
+      caseTitle: caseData.title,
+      findingId: finding.id,
+      title: finding.title,
+      description: finding.description || undefined,
+      severity: finding.severity,
+      category: finding.category,
+      clientId: caseData.client.id,
+      clientName: caseData.client.name,
+    }).catch((err) => console.error('[Webhook] Failed to dispatch risk_flag.created:', err))
 
     return {
       success: true,

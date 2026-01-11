@@ -153,6 +153,7 @@ model Organization {
   notifications       Notification[]
   documentRequests    DocumentRequest[]
   apiKeys             ApiKey[]
+  webhooks            Webhook[]
 
   @@map("organizations")
 }
@@ -191,6 +192,7 @@ model User {
   portalMessages           PortalMessage[] @relation("StaffMessages")
   documentRequests         DocumentRequest[] @relation("DocumentRequestsCreated")
   apiKeys                  ApiKey[] @relation("ApiKeysCreated")
+  webhooks                 Webhook[] @relation("WebhooksCreated")
 
   @@index([organizationId])
   @@index([email])
@@ -859,6 +861,73 @@ model ApiKeyUsageLog {
   @@index([timestamp])
   @@index([endpoint])
   @@map("api_key_usage_logs")
+}
+
+// ============================================
+// WEBHOOKS
+// ============================================
+
+enum WebhookEventType {
+  CASE_CREATED
+  CASE_STATUS_CHANGED
+  RISK_FLAG_CREATED
+  DOCUMENT_UPLOADED
+}
+
+model Webhook {
+  id              String            @id @default(cuid())
+  name            String            // Descriptive name for the webhook
+  url             String            // Endpoint URL to send events to
+  secret          String            // Shared secret for HMAC signature verification
+  events          WebhookEventType[] // Which events to send
+  isActive        Boolean           @default(true)
+  headers         Json?             // Optional custom headers
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Created by user
+  createdById String?
+  createdBy   User?   @relation("WebhooksCreated", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // Delivery logs
+  deliveryLogs WebhookDeliveryLog[]
+
+  @@index([organizationId])
+  @@index([isActive])
+  @@map("webhooks")
+}
+
+model WebhookDeliveryLog {
+  id              String           @id @default(cuid())
+  eventType       WebhookEventType
+  eventId         String           // Unique event identifier (for idempotency)
+  payload         Json             // Full payload sent
+  statusCode      Int?             // HTTP response status code
+  responseBody    String?          // Response body (truncated if too long)
+  responseTimeMs  Int?             // Response time in milliseconds
+  error           String?          // Error message if failed
+  attempt         Int              @default(1) // Retry attempt number
+  deliveredAt     DateTime?        // When successfully delivered
+  createdAt       DateTime         @default(now())
+
+  // Webhook relation
+  webhookId String
+  webhook   Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  // Related entities (for debugging)
+  caseId    String?
+  clientId  String?
+  findingId String?
+
+  @@index([webhookId])
+  @@index([eventType])
+  @@index([eventId])
+  @@index([createdAt])
+  @@map("webhook_delivery_logs")
 }
 
 // ============================================

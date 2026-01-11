@@ -6,6 +6,7 @@ import { hasPermission } from '@/lib/permissions'
 import { createCaseSchema, updateCaseSchema, type CreateCaseInput, type UpdateCaseInput } from '@/lib/validators/case'
 import { caseApprovalSchema, type CaseApprovalInput } from '@/lib/validators/approval'
 import { revalidatePath } from 'next/cache'
+import { dispatchCaseCreated, dispatchCaseStatusChanged } from '@/lib/webhooks'
 
 // TODO: Get actual user/org from session - for now use temp values
 const TEMP_ORG_ID = 'temp-org-id'
@@ -51,9 +52,28 @@ export async function createCase(data: CreateCaseInput) {
         dueDate: validated.data.dueDate ? new Date(validated.data.dueDate) : null,
         organizationId: TEMP_ORG_ID,
       },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     })
 
     revalidatePath('/cases')
+
+    // Dispatch webhook for case creation (fire and forget)
+    dispatchCaseCreated({
+      organizationId: TEMP_ORG_ID,
+      caseId: caseData.id,
+      caseTitle: caseData.title,
+      clientId: caseData.clientId,
+      clientName: caseData.client.name,
+      status: caseData.status,
+      riskLevel: caseData.riskLevel,
+    }).catch((err) => console.error('[Webhook] Failed to dispatch case.created:', err))
 
     return {
       success: true,
@@ -79,6 +99,13 @@ export async function updateCase(id: string, data: UpdateCaseInput) {
   }
 
   try {
+    // Get the current case to check for status changes
+    const existingCase = await prisma.case.findUnique({
+      where: { id },
+      select: { status: true },
+    })
+    const previousStatus = existingCase?.status
+
     const updateData: Record<string, unknown> = {}
 
     if (validated.data.title !== undefined) updateData.title = validated.data.title
@@ -96,10 +123,31 @@ export async function updateCase(id: string, data: UpdateCaseInput) {
         organizationId: TEMP_ORG_ID,
       },
       data: updateData,
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     })
 
     revalidatePath('/cases')
     revalidatePath(`/cases/${id}`)
+
+    // Dispatch webhook if status changed (fire and forget)
+    if (validated.data.status !== undefined && previousStatus !== validated.data.status) {
+      dispatchCaseStatusChanged({
+        organizationId: TEMP_ORG_ID,
+        caseId: caseData.id,
+        caseTitle: caseData.title,
+        clientId: caseData.clientId,
+        clientName: caseData.client.name,
+        previousStatus: previousStatus || 'UNKNOWN',
+        newStatus: validated.data.status,
+      }).catch((err) => console.error('[Webhook] Failed to dispatch case.status_changed:', err))
+    }
 
     return {
       success: true,

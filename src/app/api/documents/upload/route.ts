@@ -4,6 +4,7 @@ import { DocumentType, DocumentStatus } from '@prisma/client'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
+import { dispatchDocumentUploaded } from '@/lib/webhooks'
 
 // TODO: Get actual user/org from session
 const TEMP_ORG_ID = 'temp-org-id'
@@ -104,6 +105,16 @@ export async function POST(request: NextRequest) {
         organizationId: TEMP_ORG_ID,
       },
     })
+
+    // Dispatch webhook for document upload (fire and forget)
+    dispatchDocumentUploaded({
+      organizationId: TEMP_ORG_ID,
+      documentId: document.id,
+      documentName: document.originalName,
+      category: document.category,
+      clientId: client.id,
+      clientName: client.name,
+    }).catch((err) => console.error('[Webhook] Failed to dispatch document.uploaded:', err))
 
     return NextResponse.json({
       success: true,
