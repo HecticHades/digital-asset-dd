@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge, StatusBadge } from '@/components/ui/badge'
@@ -13,6 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Modal, ModalContent, ModalFooter } from '@/components/ui/modal'
+import { DocumentUpload } from '@/components/uploads/document-upload'
 import { format } from 'date-fns'
 import type { Client, Wallet, Document, Transaction, Case, Blockchain, DocumentType, DocumentStatus, TransactionType, TransactionSource, CaseStatus, RiskLevel } from '@prisma/client'
 
@@ -26,7 +30,17 @@ interface ClientTabsProps {
 }
 
 export function ClientTabs({ client }: ClientTabsProps) {
+  const router = useRouter()
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [previewDocument, setPreviewDocument] = useState<Document | null>(null)
+
+  const handleUploadComplete = () => {
+    setShowUploadModal(false)
+    router.refresh()
+  }
+
   return (
+    <>
     <Tabs defaultValue="overview">
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -112,38 +126,75 @@ export function ClientTabs({ client }: ClientTabsProps) {
       </TabsContent>
 
       <TabsContent value="documents">
-        {client.documents.length === 0 ? (
-          <EmptyState
-            title="No documents"
-            description="Upload documents to verify this client's identity and source of funds."
-            icon={<DocumentIcon />}
-          />
-        ) : (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Document</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Uploaded</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {client.documents.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell className="font-medium">{doc.originalName}</TableCell>
-                    <TableCell>{formatDocumentType(doc.category)}</TableCell>
-                    <TableCell>
-                      <DocumentStatusBadge status={doc.status} />
-                    </TableCell>
-                    <TableCell>{format(doc.createdAt, 'MMM d, yyyy')}</TableCell>
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => setShowUploadModal(true)}>
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Upload Document
+            </Button>
+          </div>
+          {client.documents.length === 0 ? (
+            <EmptyState
+              title="No documents"
+              description="Upload documents to verify this client's identity and source of funds."
+              icon={<DocumentIcon />}
+            />
+          ) : (
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Document</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Uploaded</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-        )}
+                </TableHeader>
+                <TableBody>
+                  {client.documents.map((doc) => (
+                    <TableRow key={doc.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <FileTypeIcon mimeType={doc.mimeType} />
+                          <span className="font-medium">{doc.originalName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{formatDocumentType(doc.category)}</TableCell>
+                      <TableCell>
+                        <DocumentStatusBadge status={doc.status} />
+                      </TableCell>
+                      <TableCell className="text-slate-500 text-sm">
+                        {formatFileSize(doc.size)}
+                      </TableCell>
+                      <TableCell>{format(doc.createdAt, 'MMM d, yyyy')}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPreviewDocument(doc)}
+                          >
+                            <EyeIcon className="w-4 h-4" />
+                          </Button>
+                          <a
+                            href={`/api/documents/${doc.id}?download=true`}
+                            download
+                          >
+                            <Button variant="ghost" size="sm">
+                              <DownloadIcon className="w-4 h-4" />
+                            </Button>
+                          </a>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          )}
+        </div>
       </TabsContent>
 
       <TabsContent value="transactions">
@@ -268,6 +319,89 @@ export function ClientTabs({ client }: ClientTabsProps) {
         )}
       </TabsContent>
     </Tabs>
+
+    {/* Upload Document Modal */}
+    <Modal
+      isOpen={showUploadModal}
+      onClose={() => setShowUploadModal(false)}
+      title="Upload Document"
+      size="lg"
+    >
+      <ModalContent>
+        <DocumentUpload
+          clientId={client.id}
+          onUploadComplete={handleUploadComplete}
+          onCancel={() => setShowUploadModal(false)}
+        />
+      </ModalContent>
+    </Modal>
+
+    {/* Document Preview Modal */}
+    <Modal
+      isOpen={!!previewDocument}
+      onClose={() => setPreviewDocument(null)}
+      title={previewDocument?.originalName || 'Document Preview'}
+      size="xl"
+    >
+      {previewDocument && (
+        <>
+          <ModalContent className="p-0">
+            <div className="bg-slate-100 min-h-[400px] flex items-center justify-center">
+              {previewDocument.mimeType.startsWith('image/') ? (
+                <img
+                  src={`/api/documents/${previewDocument.id}?preview=true`}
+                  alt={previewDocument.originalName}
+                  className="max-w-full max-h-[60vh] object-contain"
+                />
+              ) : previewDocument.mimeType === 'application/pdf' ? (
+                <iframe
+                  src={`/api/documents/${previewDocument.id}?preview=true`}
+                  className="w-full h-[60vh]"
+                  title={previewDocument.originalName}
+                />
+              ) : (
+                <div className="text-center p-8">
+                  <FileIcon className="h-16 w-16 text-slate-400 mx-auto" />
+                  <p className="mt-4 text-slate-600">Preview not available</p>
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t border-slate-200">
+              <dl className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <dt className="text-slate-500">Category</dt>
+                  <dd className="font-medium">{formatDocumentType(previewDocument.category)}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Status</dt>
+                  <dd><DocumentStatusBadge status={previewDocument.status} /></dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Size</dt>
+                  <dd className="font-medium">{formatFileSize(previewDocument.size)}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Uploaded</dt>
+                  <dd className="font-medium">{format(previewDocument.createdAt, 'PPpp')}</dd>
+                </div>
+              </dl>
+            </div>
+          </ModalContent>
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setPreviewDocument(null)}>
+              Close
+            </Button>
+            <a href={`/api/documents/${previewDocument.id}?download=true`} download>
+              <Button>
+                <DownloadIcon className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+            </a>
+          </ModalFooter>
+        </>
+      )}
+    </Modal>
+    </>
   )
 }
 
@@ -404,4 +538,71 @@ function CaseIcon() {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
     </svg>
   )
+}
+
+function PlusIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+  )
+}
+
+function EyeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+  )
+}
+
+function DownloadIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+  )
+}
+
+function FileIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  )
+}
+
+function FileTypeIcon({ mimeType }: { mimeType: string }) {
+  if (mimeType === 'application/pdf') {
+    return (
+      <div className="w-8 h-8 flex items-center justify-center bg-red-100 rounded">
+        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      </div>
+    )
+  }
+  if (mimeType.startsWith('image/')) {
+    return (
+      <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded">
+        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+    )
+  }
+  return (
+    <div className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded">
+      <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    </div>
+  )
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
