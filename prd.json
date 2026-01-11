@@ -478,7 +478,7 @@
       "id": "US-036",
       "title": "In-app notifications",
       "priority": 36,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Notification bell icon in header",
         "Notification types: case assigned, case status changed, new risk flag, deadline approaching",
