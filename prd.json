@@ -153,7 +153,7 @@
       "id": "US-012",
       "title": "Create dashboard overview",
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/app/(dashboard)/dashboard/page.tsx",
         "Stats cards: total clients, active cases, pending reviews, high-risk flags",
