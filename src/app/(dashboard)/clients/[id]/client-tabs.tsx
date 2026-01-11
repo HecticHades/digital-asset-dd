@@ -21,6 +21,7 @@ import { DocumentUpload } from '@/components/uploads/document-upload'
 import { DocumentChecklist } from '@/components/documents/document-checklist'
 import { AddWalletForm } from '@/components/wallets/add-wallet-form'
 import { ExchangeConnections } from '@/components/exchanges/exchange-connections'
+import { GainsLossesView } from '@/components/gains/gains-losses-view'
 import { format } from 'date-fns'
 import type { Client, Wallet, Document, Transaction, Case, Blockchain, DocumentType, DocumentStatus, TransactionType, TransactionSource, CaseStatus, RiskLevel } from '@prisma/client'
 import { deleteWallet, verifyWallet, getWalletProofDocuments } from './wallets/actions'
@@ -213,6 +214,7 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections }: C
         <TabsTrigger value="exchanges">Exchanges ({exchangeConnections.length})</TabsTrigger>
         <TabsTrigger value="documents">Documents ({client.documents.length})</TabsTrigger>
         <TabsTrigger value="transactions">Transactions</TabsTrigger>
+        <TabsTrigger value="gains">Gains/Losses</TabsTrigger>
         <TabsTrigger value="cases">Cases ({client.cases.length})</TabsTrigger>
       </TabsList>
 
@@ -564,6 +566,10 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections }: C
             </Card>
           </div>
         )}
+      </TabsContent>
+
+      <TabsContent value="gains">
+        <GainsLossesView clientId={client.id} />
       </TabsContent>
 
       <TabsContent value="cases">
