@@ -84,7 +84,7 @@
       "id": "US-007",
       "title": "Create CEX parsers for Binance, Coinbase, Kraken",
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/lib/parsers/binance.ts for Binance trade history CSV",
         "Create src/lib/parsers/coinbase.ts for Coinbase transaction CSV",
