@@ -373,7 +373,7 @@
       "id": "US-019",
       "title": "CEX gains/losses calculation",
       "priority": 28,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/lib/analyzers/gains.ts",
         "Calculate realized gains/losses per asset",
