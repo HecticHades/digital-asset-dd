@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createPasswordResetToken } from '@/lib/password-reset'
 
+export const dynamic = 'force-dynamic'
+
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
 })
