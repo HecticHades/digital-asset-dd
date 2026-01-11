@@ -72,7 +72,7 @@
       "id": "US-006",
       "title": "Create client detail page",
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/app/(dashboard)/clients/[id]/page.tsx",
         "Display client info with edit capability",
