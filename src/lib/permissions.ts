@@ -169,7 +169,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 /**
  * Check if a role has a specific permission
  */
-export function hasPermission(role: UserRole | string, permission: Permission): boolean {
+export function hasPermission(role: UserRole | string | undefined, permission: Permission): boolean {
+  if (!role) return false
   const roleKey = role as UserRole
   const permissions = ROLE_PERMISSIONS[roleKey]
   if (!permissions) return false
@@ -179,21 +180,24 @@ export function hasPermission(role: UserRole | string, permission: Permission): 
 /**
  * Check if a role has all of the specified permissions
  */
-export function hasAllPermissions(role: UserRole | string, permissions: Permission[]): boolean {
+export function hasAllPermissions(role: UserRole | string | undefined, permissions: Permission[]): boolean {
+  if (!role) return false
   return permissions.every(p => hasPermission(role, p))
 }
 
 /**
  * Check if a role has any of the specified permissions
  */
-export function hasAnyPermission(role: UserRole | string, permissions: Permission[]): boolean {
+export function hasAnyPermission(role: UserRole | string | undefined, permissions: Permission[]): boolean {
+  if (!role) return false
   return permissions.some(p => hasPermission(role, p))
 }
 
 /**
  * Get all permissions for a role
  */
-export function getPermissions(role: UserRole | string): Permission[] {
+export function getPermissions(role: UserRole | string | undefined): Permission[] {
+  if (!role) return []
   const roleKey = role as UserRole
   return ROLE_PERMISSIONS[roleKey] || []
 }

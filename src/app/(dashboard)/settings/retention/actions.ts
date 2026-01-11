@@ -72,7 +72,7 @@ export async function archiveCaseAction(
   }
 
   // Only admins and managers can archive cases
-  if (!['ADMIN', 'MANAGER'].includes(session.user.role)) {
+  if (!session.user.role || !['ADMIN', 'MANAGER'].includes(session.user.role)) {
     return { success: false, error: 'Insufficient permissions to archive cases' }
   }
 
@@ -100,7 +100,7 @@ export async function restoreCaseAction(
   }
 
   // Only admins and managers can restore cases
-  if (!['ADMIN', 'MANAGER'].includes(session.user.role)) {
+  if (!session.user.role || !['ADMIN', 'MANAGER'].includes(session.user.role)) {
     return { success: false, error: 'Insufficient permissions to restore cases' }
   }
 

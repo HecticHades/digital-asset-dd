@@ -481,6 +481,6 @@ export async function getOrganizationStats(organizationId: string): Promise<{
 /**
  * Check if user has super admin privileges
  */
-export function isSuperAdmin(role: string): boolean {
+export function isSuperAdmin(role: string | undefined): boolean {
   return role === 'SUPER_ADMIN'
 }

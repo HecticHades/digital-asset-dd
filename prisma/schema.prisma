@@ -186,6 +186,7 @@ model User {
   createdExchangeConnections ExchangeConnection[] @relation("CreatedExchangeConnection")
   notifications            Notification[]
   notificationPreferences  NotificationPreference?
+  portalMessages           PortalMessage[] @relation("StaffMessages")
 
   @@index([organizationId])
   @@index([email])
@@ -218,6 +219,8 @@ model Client {
   documents           Document[]
   transactions        Transaction[]
   exchangeConnections ExchangeConnection[]
+  portalUser          ClientPortalUser?
+  portalMessages      PortalMessage[]
 
   @@index([organizationId])
   @@index([email])
@@ -745,4 +748,56 @@ model EmailLog {
   @@index([sentAt])
   @@index([status])
   @@map("email_logs")
+}
+
+// ============================================
+// CLIENT PORTAL
+// ============================================
+
+model ClientPortalUser {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  passwordHash   String
+  isActive       Boolean   @default(true)
+  failedAttempts Int       @default(0)
+  lockedUntil    DateTime?
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Client relation
+  clientId String @unique
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Messages sent by this portal user
+  messages PortalMessage[] @relation("PortalUserMessages")
+
+  @@index([email])
+  @@map("client_portal_users")
+}
+
+model PortalMessage {
+  id        String   @id @default(cuid())
+  content   String
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  // Client relation
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Either from portal user (client) or from staff user (analyst)
+  portalUserId String?
+  portalUser   ClientPortalUser? @relation("PortalUserMessages", fields: [portalUserId], references: [id], onDelete: SetNull)
+
+  staffUserId String?
+  staffUser   User? @relation("StaffMessages", fields: [staffUserId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([portalUserId])
+  @@index([staffUserId])
+  @@index([createdAt])
+  @@map("portal_messages")
 }

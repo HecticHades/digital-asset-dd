@@ -6,9 +6,13 @@ declare module 'next-auth' {
     id: string
     email: string
     name: string
-    role: UserRole | string
+    role?: UserRole | string
     organizationId: string
     organizationName: string
+    // Portal user fields
+    clientId?: string
+    clientName?: string
+    isPortalUser?: boolean
   }
 
   interface Session {
@@ -21,8 +25,12 @@ declare module 'next-auth/jwt' {
     id: string
     email: string
     name: string
-    role: string
+    role?: string
     organizationId: string
     organizationName: string
+    // Portal user fields
+    clientId?: string
+    clientName?: string
+    isPortalUser?: boolean
   }
 }

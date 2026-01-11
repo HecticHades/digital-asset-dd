@@ -170,7 +170,7 @@ export async function requireRole(allowedRoles: string | string[]) {
   }
 
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles]
-  if (!roles.includes(user.role)) {
+  if (!user.role || !roles.includes(user.role)) {
     throw new Error('Forbidden: Insufficient permissions')
   }
 
@@ -185,5 +185,5 @@ export async function checkRole(allowedRoles: string | string[]): Promise<boolea
   if (!user) return false
 
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles]
-  return roles.includes(user.role)
+  return !!user.role && roles.includes(user.role)
 }
