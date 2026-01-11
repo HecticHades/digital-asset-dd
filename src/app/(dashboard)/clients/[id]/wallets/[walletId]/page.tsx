@@ -9,6 +9,7 @@ import { getAddressExplorerUrl } from '@/lib/blockchain'
 import { format } from 'date-fns'
 import type { Blockchain } from '@prisma/client'
 import { WalletBalanceCard } from './wallet-balance-card'
+import { WalletRiskFlagsWrapper } from './wallet-risk-flags-wrapper'
 
 interface WalletPageProps {
   params: Promise<{
@@ -40,6 +41,13 @@ export default async function WalletPage({ params }: WalletPageProps) {
       transactions: {
         where: { source: 'ON_CHAIN' },
         orderBy: { timestamp: 'desc' },
+      },
+      findings: {
+        orderBy: [
+          { isResolved: 'asc' },
+          { severity: 'asc' },
+          { createdAt: 'desc' },
+        ],
       },
     },
   })
@@ -150,6 +158,14 @@ export default async function WalletPage({ params }: WalletPageProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Risk Flags */}
+      <WalletRiskFlagsWrapper
+        walletId={wallet.id}
+        walletAddress={wallet.address}
+        blockchain={wallet.blockchain}
+        findings={wallet.findings}
+      />
 
       {/* Wallet Info */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
