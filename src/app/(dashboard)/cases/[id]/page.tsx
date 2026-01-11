@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge, RiskBadge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { CaseTabs } from './case-tabs'
+import { CaseArchiveButton } from './case-archive-button'
 import { calculateRiskBreakdown, getRiskScoreColor } from '@/lib/analyzers/risk'
 import { createFinding, resolveFinding, reopenFinding } from './findings/actions'
 import {
@@ -16,8 +17,10 @@ import {
   deleteChecklistItem,
 } from './checklist/actions'
 import { updateCase, processCaseApproval, reopenRejectedCase, markCaseCompleted } from '../actions'
+import { canArchiveCase } from '@/lib/retention'
 import type { FindingSeverity, FindingCategory } from '@/lib/validators/finding'
 import type { ChecklistCompletionStatus } from '@/lib/validators/checklist'
+import type { CaseStatus } from '@prisma/client'
 
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
@@ -246,6 +249,9 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
           <div className="flex items-center gap-3">
             <StatusBadge status={caseData.status} />
             <RiskBadge level={caseData.riskLevel} />
+            {canArchiveCase(caseData.status as CaseStatus) && (
+              <CaseArchiveButton caseId={caseData.id} caseTitle={caseData.title} />
+            )}
             <Link href={`/cases/${caseData.id}/edit`}>
               <Button variant="outline" size="sm">
                 Edit Case

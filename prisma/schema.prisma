@@ -144,6 +144,9 @@ model Organization {
   auditLogs           AuditLog[]
   invitations         UserInvitation[]
   exchangeConnections ExchangeConnection[]
+  retentionPolicy     RetentionPolicy?
+  archivedCases       ArchivedCase[]
+  deletionLogs        DeletionLog[]
 
   @@map("organizations")
 }
@@ -560,4 +563,77 @@ model ExchangeConnection {
   @@index([organizationId])
   @@index([clientId])
   @@map("exchange_connections")
+}
+
+// ============================================
+// DATA RETENTION
+// ============================================
+
+model RetentionPolicy {
+  id                      String   @id @default(cuid())
+  caseRetentionDays       Int      @default(2555) // ~7 years default
+  clientRetentionDays     Int      @default(2555)
+  documentRetentionDays   Int      @default(2555)
+  transactionRetentionDays Int     @default(2555)
+  auditLogRetentionDays   Int      @default(3650) // 10 years
+  autoArchiveEnabled      Boolean  @default(false)
+  autoDeleteEnabled       Boolean  @default(false)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // One policy per organization
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("retention_policies")
+}
+
+model ArchivedCase {
+  id               String   @id @default(cuid())
+  originalCaseId   String   @unique
+  title            String
+  description      String?
+  status           CaseStatus
+  riskScore        Int?
+  riskLevel        RiskLevel
+  clientName       String
+  clientEmail      String?
+  assignedToName   String?
+  reviewedByName   String?
+  reviewedAt       DateTime?
+  reviewNotes      String?
+  archivedData     Json     // Full case data snapshot
+  archivedAt       DateTime @default(now())
+  archivedByName   String?
+  archiveReason    String?
+  expiresAt        DateTime? // When this record can be deleted
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([originalCaseId])
+  @@index([archivedAt])
+  @@map("archived_cases")
+}
+
+model DeletionLog {
+  id            String   @id @default(cuid())
+  entityType    String   // CASE, CLIENT, DOCUMENT, etc.
+  entityId      String
+  entityTitle   String?
+  deletedData   Json?    // Snapshot of deleted data for audit
+  deletedAt     DateTime @default(now())
+  deletedByName String?
+  deletionReason String?
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([entityType])
+  @@index([deletedAt])
+  @@map("deletion_logs")
 }
