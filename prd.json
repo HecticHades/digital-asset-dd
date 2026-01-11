@@ -179,7 +179,7 @@
       "id": "US-014",
       "title": "Document verification workflow",
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Mark documents as verified/rejected with notes",
         "Track verifier and verification timestamp",

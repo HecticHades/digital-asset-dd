@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge, StatusBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -17,27 +18,91 @@ import {
 } from '@/components/ui/table'
 import { Modal, ModalContent, ModalFooter } from '@/components/ui/modal'
 import { DocumentUpload } from '@/components/uploads/document-upload'
+import { DocumentChecklist } from '@/components/documents/document-checklist'
 import { format } from 'date-fns'
 import type { Client, Wallet, Document, Transaction, Case, Blockchain, DocumentType, DocumentStatus, TransactionType, TransactionSource, CaseStatus, RiskLevel } from '@prisma/client'
+
+interface DocumentWithVerifier extends Document {
+  verifiedBy?: { id: string; name: string; email: string } | null
+}
+
+interface DocumentChecklistData {
+  items: Array<{
+    category: DocumentType
+    status: DocumentStatus | null
+    isUploaded: boolean
+    isVerified: boolean
+  }>
+  completionPercentage: number
+  verifiedCount: number
+  totalRequired: number
+  missingDocuments: DocumentType[]
+  pendingDocuments: DocumentType[]
+}
 
 interface ClientTabsProps {
   client: Client & {
     wallets: Wallet[]
-    documents: Document[]
+    documents: DocumentWithVerifier[]
     transactions: Transaction[]
     cases: Case[]
   }
+  documentChecklist: DocumentChecklistData
 }
 
-export function ClientTabs({ client }: ClientTabsProps) {
+const STATUS_FILTER_OPTIONS = [
+  { value: 'ALL', label: 'All Documents' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'VERIFIED', label: 'Verified' },
+  { value: 'REJECTED', label: 'Rejected' },
+]
+
+export function ClientTabs({ client, documentChecklist }: ClientTabsProps) {
   const router = useRouter()
   const [showUploadModal, setShowUploadModal] = useState(false)
-  const [previewDocument, setPreviewDocument] = useState<Document | null>(null)
+  const [previewDocument, setPreviewDocument] = useState<DocumentWithVerifier | null>(null)
+  const [verifyDocument, setVerifyDocument] = useState<DocumentWithVerifier | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string>('ALL')
+  const [verificationNotes, setVerificationNotes] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
 
   const handleUploadComplete = () => {
     setShowUploadModal(false)
     router.refresh()
   }
+
+  const handleVerify = async (status: 'VERIFIED' | 'REJECTED') => {
+    if (!verifyDocument) return
+
+    setIsVerifying(true)
+    try {
+      const formData = new FormData()
+      formData.append('documentId', verifyDocument.id)
+      formData.append('status', status)
+      formData.append('notes', verificationNotes)
+
+      const response = await fetch('/api/documents/verify', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to verify document')
+      }
+
+      setVerifyDocument(null)
+      setVerificationNotes('')
+      router.refresh()
+    } catch (error) {
+      console.error('Verification error:', error)
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  const filteredDocuments = client.documents.filter((doc) =>
+    statusFilter === 'ALL' ? true : doc.status === statusFilter
+  )
 
   return (
     <>
@@ -51,33 +116,37 @@ export function ClientTabs({ client }: ClientTabsProps) {
       </TabsList>
 
       <TabsContent value="overview">
-        <Card>
-          <CardHeader>
-            <CardTitle>Client Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <dt className="text-sm font-medium text-slate-500">Phone</dt>
-              <dd className="mt-1 text-sm text-slate-900">{client.phone || '-'}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-slate-500">Address</dt>
-              <dd className="mt-1 text-sm text-slate-900">{client.address || '-'}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-slate-500">Notes</dt>
-              <dd className="mt-1 text-sm text-slate-900 whitespace-pre-wrap">{client.notes || '-'}</dd>
-            </div>
-            <div className="pt-4 border-t border-slate-200">
-              <dt className="text-sm font-medium text-slate-500">Created</dt>
-              <dd className="mt-1 text-sm text-slate-900">{format(client.createdAt, 'PPpp')}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-slate-500">Last Updated</dt>
-              <dd className="mt-1 text-sm text-slate-900">{format(client.updatedAt, 'PPpp')}</dd>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Client Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <dt className="text-sm font-medium text-slate-500">Phone</dt>
+                <dd className="mt-1 text-sm text-slate-900">{client.phone || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-slate-500">Address</dt>
+                <dd className="mt-1 text-sm text-slate-900">{client.address || '-'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-slate-500">Notes</dt>
+                <dd className="mt-1 text-sm text-slate-900 whitespace-pre-wrap">{client.notes || '-'}</dd>
+              </div>
+              <div className="pt-4 border-t border-slate-200">
+                <dt className="text-sm font-medium text-slate-500">Created</dt>
+                <dd className="mt-1 text-sm text-slate-900">{format(client.createdAt, 'PPpp')}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-slate-500">Last Updated</dt>
+                <dd className="mt-1 text-sm text-slate-900">{format(client.updatedAt, 'PPpp')}</dd>
+              </div>
+            </CardContent>
+          </Card>
+
+          <DocumentChecklist {...documentChecklist} />
+        </div>
       </TabsContent>
 
       <TabsContent value="wallets">
@@ -127,17 +196,36 @@ export function ClientTabs({ client }: ClientTabsProps) {
 
       <TabsContent value="documents">
         <div className="space-y-4">
-          <div className="flex justify-end">
+          {/* Document Actions Bar */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                options={STATUS_FILTER_OPTIONS}
+                className="w-40"
+              />
+              <div className="text-sm text-slate-500">
+                {filteredDocuments.length} of {client.documents.length} documents
+              </div>
+            </div>
             <Button onClick={() => setShowUploadModal(true)}>
               <PlusIcon className="w-4 h-4 mr-2" />
               Upload Document
             </Button>
           </div>
+
           {client.documents.length === 0 ? (
             <EmptyState
               title="No documents"
               description="Upload documents to verify this client's identity and source of funds."
               icon={<DocumentIcon />}
+            />
+          ) : filteredDocuments.length === 0 ? (
+            <EmptyState
+              title="No matching documents"
+              description={`No documents with status "${statusFilter}". Try changing the filter.`}
+              icon={<FilterIcon />}
             />
           ) : (
             <Card>
@@ -147,13 +235,13 @@ export function ClientTabs({ client }: ClientTabsProps) {
                     <TableHead>Document</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Size</TableHead>
+                    <TableHead>Verified By</TableHead>
                     <TableHead>Uploaded</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {client.documents.map((doc) => (
+                  {filteredDocuments.map((doc) => (
                     <TableRow key={doc.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -165,8 +253,19 @@ export function ClientTabs({ client }: ClientTabsProps) {
                       <TableCell>
                         <DocumentStatusBadge status={doc.status} />
                       </TableCell>
-                      <TableCell className="text-slate-500 text-sm">
-                        {formatFileSize(doc.size)}
+                      <TableCell>
+                        {doc.verifiedBy ? (
+                          <div className="text-sm">
+                            <div className="font-medium text-slate-900">{doc.verifiedBy.name}</div>
+                            {doc.verifiedAt && (
+                              <div className="text-slate-500 text-xs">
+                                {format(new Date(doc.verifiedAt), 'MMM d, yyyy')}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">-</span>
+                        )}
                       </TableCell>
                       <TableCell>{format(doc.createdAt, 'MMM d, yyyy')}</TableCell>
                       <TableCell className="text-right">
@@ -175,14 +274,28 @@ export function ClientTabs({ client }: ClientTabsProps) {
                             variant="ghost"
                             size="sm"
                             onClick={() => setPreviewDocument(doc)}
+                            title="Preview"
                           >
                             <EyeIcon className="w-4 h-4" />
                           </Button>
+                          {doc.status === 'PENDING' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setVerifyDocument(doc)
+                                setVerificationNotes(doc.notes || '')
+                              }}
+                              title="Verify"
+                            >
+                              <CheckIcon className="w-4 h-4 text-green-600" />
+                            </Button>
+                          )}
                           <a
                             href={`/api/documents/${doc.id}?download=true`}
                             download
                           >
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" title="Download">
                               <DownloadIcon className="w-4 h-4" />
                             </Button>
                           </a>
@@ -384,6 +497,28 @@ export function ClientTabs({ client }: ClientTabsProps) {
                   <dt className="text-slate-500">Uploaded</dt>
                   <dd className="font-medium">{format(previewDocument.createdAt, 'PPpp')}</dd>
                 </div>
+                {previewDocument.verifiedBy && (
+                  <>
+                    <div>
+                      <dt className="text-slate-500">Verified By</dt>
+                      <dd className="font-medium">{previewDocument.verifiedBy.name}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-500">Verified At</dt>
+                      <dd className="font-medium">
+                        {previewDocument.verifiedAt
+                          ? format(new Date(previewDocument.verifiedAt), 'PPpp')
+                          : '-'}
+                      </dd>
+                    </div>
+                  </>
+                )}
+                {previewDocument.notes && (
+                  <div className="col-span-2">
+                    <dt className="text-slate-500">Notes</dt>
+                    <dd className="font-medium whitespace-pre-wrap">{previewDocument.notes}</dd>
+                  </div>
+                )}
               </dl>
             </div>
           </ModalContent>
@@ -397,6 +532,117 @@ export function ClientTabs({ client }: ClientTabsProps) {
                 Download
               </Button>
             </a>
+          </ModalFooter>
+        </>
+      )}
+    </Modal>
+
+    {/* Document Verification Modal */}
+    <Modal
+      isOpen={!!verifyDocument}
+      onClose={() => {
+        setVerifyDocument(null)
+        setVerificationNotes('')
+      }}
+      title="Verify Document"
+      size="lg"
+    >
+      {verifyDocument && (
+        <>
+          <ModalContent>
+            <div className="space-y-4">
+              {/* Document Preview */}
+              <div className="bg-slate-100 rounded-lg min-h-[300px] flex items-center justify-center">
+                {verifyDocument.mimeType.startsWith('image/') ? (
+                  <img
+                    src={`/api/documents/${verifyDocument.id}?preview=true`}
+                    alt={verifyDocument.originalName}
+                    className="max-w-full max-h-[400px] object-contain"
+                  />
+                ) : verifyDocument.mimeType === 'application/pdf' ? (
+                  <iframe
+                    src={`/api/documents/${verifyDocument.id}?preview=true`}
+                    className="w-full h-[400px]"
+                    title={verifyDocument.originalName}
+                  />
+                ) : (
+                  <div className="text-center p-8">
+                    <FileIcon className="h-16 w-16 text-slate-400 mx-auto" />
+                    <p className="mt-4 text-slate-600">Preview not available</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Document Details */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <dt className="text-slate-500">File Name</dt>
+                  <dd className="font-medium text-slate-900">{verifyDocument.originalName}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Category</dt>
+                  <dd className="font-medium text-slate-900">
+                    {formatDocumentType(verifyDocument.category)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Size</dt>
+                  <dd className="font-medium text-slate-900">
+                    {formatFileSize(verifyDocument.size)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-500">Uploaded</dt>
+                  <dd className="font-medium text-slate-900">
+                    {format(new Date(verifyDocument.createdAt), 'PPpp')}
+                  </dd>
+                </div>
+              </div>
+
+              {/* Verification Notes */}
+              <div>
+                <label
+                  htmlFor="verification-notes"
+                  className="block text-sm font-medium text-slate-700 mb-1"
+                >
+                  Verification Notes
+                </label>
+                <textarea
+                  id="verification-notes"
+                  value={verificationNotes}
+                  onChange={(e) => setVerificationNotes(e.target.value)}
+                  rows={3}
+                  className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Add notes about this document (optional)"
+                />
+              </div>
+            </div>
+          </ModalContent>
+
+          <ModalFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setVerifyDocument(null)
+                setVerificationNotes('')
+              }}
+              disabled={isVerifying}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleVerify('REJECTED')}
+              disabled={isVerifying}
+            >
+              {isVerifying ? 'Processing...' : 'Reject'}
+            </Button>
+            <Button
+              onClick={() => handleVerify('VERIFIED')}
+              disabled={isVerifying}
+            >
+              {isVerifying ? 'Processing...' : 'Verify'}
+            </Button>
           </ModalFooter>
         </>
       )}
@@ -524,6 +770,14 @@ function DocumentIcon() {
   )
 }
 
+function FilterIcon() {
+  return (
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+    </svg>
+  )
+}
+
 function TransactionIcon() {
   return (
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -553,6 +807,14 @@ function EyeIcon({ className }: { className?: string }) {
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+  )
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   )
 }

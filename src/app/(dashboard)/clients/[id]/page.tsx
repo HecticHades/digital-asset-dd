@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge, RiskBadge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { ClientTabs } from './client-tabs'
+import { getDocumentChecklistStatus } from './documents/actions'
 
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
@@ -23,7 +24,14 @@ async function getClient(id: string) {
       },
       include: {
         wallets: true,
-        documents: true,
+        documents: {
+          include: {
+            verifiedBy: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
         transactions: {
           orderBy: { timestamp: 'desc' },
           take: 10,
@@ -40,7 +48,10 @@ async function getClient(id: string) {
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const { id } = await params
-  const client = await getClient(id)
+  const [client, checklistStatus] = await Promise.all([
+    getClient(id),
+    getDocumentChecklistStatus(id),
+  ])
 
   if (!client) {
     notFound()
@@ -117,7 +128,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       </div>
 
       {/* Tabs */}
-      <ClientTabs client={client} />
+      <ClientTabs client={client} documentChecklist={checklistStatus} />
     </div>
   )
 }
