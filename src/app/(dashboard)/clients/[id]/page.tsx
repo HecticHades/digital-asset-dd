@@ -8,6 +8,7 @@ import { format } from 'date-fns'
 import { ClientTabs } from './client-tabs'
 import { getDocumentChecklistStatus } from './documents/actions'
 import { getExchangeConnections } from './exchanges/actions'
+import { getDocumentRequests } from './document-requests/actions'
 
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
@@ -40,6 +41,9 @@ async function getClient(id: string) {
         cases: {
           orderBy: { createdAt: 'desc' },
         },
+        portalUser: {
+          select: { id: true },
+        },
       },
     })
   } catch {
@@ -49,10 +53,11 @@ async function getClient(id: string) {
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const { id } = await params
-  const [client, checklistStatus, exchangeConnectionsResult] = await Promise.all([
+  const [client, checklistStatus, exchangeConnectionsResult, documentRequests] = await Promise.all([
     getClient(id),
     getDocumentChecklistStatus(id),
     getExchangeConnections(id),
+    getDocumentRequests(id),
   ])
 
   if (!client) {
@@ -134,6 +139,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         client={client}
         documentChecklist={checklistStatus}
         exchangeConnections={exchangeConnectionsResult.connections}
+        documentRequests={documentRequests}
+        hasPortalAccount={!!client.portalUser}
       />
     </div>
   )

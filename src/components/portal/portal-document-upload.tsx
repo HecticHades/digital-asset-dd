@@ -8,6 +8,7 @@ import { DocumentType } from '@prisma/client'
 interface PortalDocumentUploadProps {
   clientId: string
   documentType: DocumentType
+  requestId?: string  // Optional document request ID
   onUploadComplete: () => void
   onCancel: () => void
 }
@@ -37,6 +38,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 export function PortalDocumentUpload({
   clientId,
   documentType,
+  requestId,
   onUploadComplete,
   onCancel,
 }: PortalDocumentUploadProps) {
@@ -117,6 +119,9 @@ export function PortalDocumentUpload({
       formData.append('file', selectedFile)
       formData.append('clientId', clientId)
       formData.append('category', documentType)
+      if (requestId) {
+        formData.append('requestId', requestId)
+      }
 
       const response = await fetch('/api/portal/documents/upload', {
         method: 'POST',

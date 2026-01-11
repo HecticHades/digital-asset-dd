@@ -24,6 +24,19 @@ interface DocumentChecklist {
   }[]
 }
 
+interface DocumentRequest {
+  id: string
+  title: string
+  description: string | null
+  category: DocumentType
+  status: string
+  priority: string
+  dueDate: string | null
+  notes: string | null
+  createdAt: string
+  requestedByName: string
+}
+
 interface PortalDashboardProps {
   clientName: string
   organizationName: string
@@ -32,6 +45,7 @@ interface PortalDashboardProps {
   unreadMessages: number
   assignedAnalyst: { id: string; name: string; email: string } | null
   clientId: string
+  documentRequests: DocumentRequest[]
 }
 
 export function PortalDashboard({
@@ -42,9 +56,11 @@ export function PortalDashboard({
   unreadMessages,
   assignedAnalyst,
   clientId,
+  documentRequests,
 }: PortalDashboardProps) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [selectedDocType, setSelectedDocType] = useState<DocumentType | null>(null)
+  const [selectedRequest, setSelectedRequest] = useState<DocumentRequest | null>(null)
 
   const handleUploadClick = (docType: DocumentType) => {
     setSelectedDocType(docType)
@@ -54,13 +70,22 @@ export function PortalDashboard({
   const handleUploadComplete = () => {
     setIsUploadModalOpen(false)
     setSelectedDocType(null)
+    setSelectedRequest(null)
     // Refresh the page to show updated documents
     window.location.reload()
+  }
+
+  const handleRequestUploadClick = (request: DocumentRequest) => {
+    setSelectedRequest(request)
+    setSelectedDocType(request.category)
+    setIsUploadModalOpen(true)
   }
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/portal/login' })
   }
+
+  const pendingRequests = documentRequests.filter(r => r.status === 'PENDING' || r.status === 'REJECTED')
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -148,6 +173,71 @@ export function PortalDashboard({
             )}
           </CardContent>
         </Card>
+
+        {/* Document Requests Section */}
+        {pendingRequests.length > 0 && (
+          <Card className="mb-8 border-amber-200 bg-amber-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-amber-800">
+                <AlertIcon className="w-5 h-5" />
+                Document Requests ({pendingRequests.length})
+              </CardTitle>
+              <CardDescription className="text-amber-700">
+                Your analyst has requested the following documents
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y divide-amber-200">
+                {pendingRequests.map((request) => (
+                  <div key={request.id} className="py-4 first:pt-0 last:pb-0">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-slate-900">{request.title}</h3>
+                          {request.priority === 'URGENT' && (
+                            <Badge variant="error">Urgent</Badge>
+                          )}
+                          {request.priority === 'HIGH' && (
+                            <Badge variant="warning">High Priority</Badge>
+                          )}
+                          {request.status === 'REJECTED' && (
+                            <Badge variant="error">Resubmit Required</Badge>
+                          )}
+                        </div>
+                        {request.description && (
+                          <p className="mt-1 text-sm text-slate-600">{request.description}</p>
+                        )}
+                        {request.dueDate && (
+                          <p className="mt-2 text-xs text-amber-700">
+                            <ClockIcon className="w-3 h-3 inline mr-1" />
+                            Due: {new Date(request.dueDate).toLocaleDateString()}
+                          </p>
+                        )}
+                        {request.notes && request.status === 'REJECTED' && (
+                          <div className="mt-2 p-2 bg-red-50 rounded text-sm text-red-700">
+                            <strong>Reason:</strong> {request.notes}
+                          </div>
+                        )}
+                        <p className="mt-2 text-xs text-slate-500">
+                          Requested by {request.requestedByName} on {new Date(request.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="ml-4">
+                        <Button
+                          size="sm"
+                          onClick={() => handleRequestUploadClick(request)}
+                        >
+                          <UploadIcon className="w-4 h-4 mr-2" />
+                          {request.status === 'REJECTED' ? 'Resubmit' : 'Upload'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Analyst Contact Card */}
         {assignedAnalyst && (
@@ -272,6 +362,7 @@ export function PortalDashboard({
             <PortalDocumentUpload
               clientId={clientId}
               documentType={selectedDocType}
+              requestId={selectedRequest?.id}
               onUploadComplete={handleUploadComplete}
               onCancel={() => setIsUploadModalOpen(false)}
             />
@@ -382,6 +473,14 @@ function UploadIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+    </svg>
+  )
+}
+
+function AlertIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
     </svg>
   )
 }

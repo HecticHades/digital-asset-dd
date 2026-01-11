@@ -151,6 +151,7 @@ model Organization {
   archivedCases       ArchivedCase[]
   deletionLogs        DeletionLog[]
   notifications       Notification[]
+  documentRequests    DocumentRequest[]
 
   @@map("organizations")
 }
@@ -187,6 +188,7 @@ model User {
   notifications            Notification[]
   notificationPreferences  NotificationPreference?
   portalMessages           PortalMessage[] @relation("StaffMessages")
+  documentRequests         DocumentRequest[] @relation("DocumentRequestsCreated")
 
   @@index([organizationId])
   @@index([email])
@@ -221,6 +223,7 @@ model Client {
   exchangeConnections ExchangeConnection[]
   portalUser          ClientPortalUser?
   portalMessages      PortalMessage[]
+  documentRequests    DocumentRequest[]
 
   @@index([organizationId])
   @@index([email])
@@ -370,7 +373,8 @@ model Document {
   verifiedAt   DateTime?
 
   // Relations
-  walletProofs Wallet[] @relation("WalletProof")
+  walletProofs     Wallet[]          @relation("WalletProof")
+  documentRequests DocumentRequest[] @relation("DocumentRequestDocument")
 
   @@index([organizationId])
   @@index([clientId])
@@ -800,4 +804,55 @@ model PortalMessage {
   @@index([staffUserId])
   @@index([createdAt])
   @@map("portal_messages")
+}
+
+// ============================================
+// DOCUMENT REQUESTS
+// ============================================
+
+enum DocumentRequestStatus {
+  PENDING     // Request sent, awaiting client response
+  SUBMITTED   // Client has submitted a document
+  VERIFIED    // Document has been verified by analyst
+  REJECTED    // Document was rejected, needs resubmission
+  CANCELLED   // Request was cancelled by analyst
+}
+
+model DocumentRequest {
+  id           String                @id @default(cuid())
+  title        String                // Brief description of what's needed
+  description  String?               // Detailed instructions for the client
+  category     DocumentType          // Type of document being requested
+  status       DocumentRequestStatus @default(PENDING)
+  priority     String                @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  dueDate      DateTime?             // Optional deadline for submission
+  notes        String?               // Notes from analyst (rejection reason, etc.)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Client relation
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Created by (analyst who made the request)
+  requestedById String
+  requestedBy   User   @relation("DocumentRequestsCreated", fields: [requestedById], references: [id], onDelete: Cascade)
+
+  // Document submitted in response (optional until client uploads)
+  documentId String?
+  document   Document? @relation("DocumentRequestDocument", fields: [documentId], references: [id], onDelete: SetNull)
+
+  // Email notification tracking
+  emailSentAt    DateTime?
+  emailMessageId String?
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("document_requests")
 }

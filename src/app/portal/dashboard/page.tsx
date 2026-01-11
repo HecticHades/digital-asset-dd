@@ -2,8 +2,9 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { portalAuthOptions } from '@/lib/portal-auth'
 import { prisma } from '@/lib/db'
-import { DocumentType, DocumentStatus } from '@prisma/client'
+import { DocumentType, DocumentStatus, DocumentRequestStatus } from '@prisma/client'
 import { PortalDashboard } from './portal-dashboard'
+import { getClientPendingRequests } from '@/app/(dashboard)/clients/[id]/document-requests/actions'
 
 // Required document types for clients
 const REQUIRED_DOCUMENTS: DocumentType[] = [
@@ -170,6 +171,21 @@ export default async function PortalDashboardPage() {
   // Get assigned analyst info
   const assignedAnalyst = client.cases[0]?.assignedTo || null
 
+  // Get pending document requests
+  const pendingRequests = await getClientPendingRequests(clientId)
+  const serializedRequests = pendingRequests.map(r => ({
+    id: r.id,
+    title: r.title,
+    description: r.description,
+    category: r.category,
+    status: r.status,
+    priority: r.priority,
+    dueDate: r.dueDate?.toISOString() || null,
+    notes: r.notes,
+    createdAt: r.createdAt.toISOString(),
+    requestedByName: r.requestedBy?.name || 'Analyst',
+  }))
+
   return (
     <PortalDashboard
       clientName={client.name}
@@ -179,6 +195,7 @@ export default async function PortalDashboardPage() {
       unreadMessages={unreadMessages}
       assignedAnalyst={assignedAnalyst}
       clientId={clientId}
+      documentRequests={serializedRequests}
     />
   )
 }

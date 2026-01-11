@@ -23,8 +23,9 @@ import { AddWalletForm } from '@/components/wallets/add-wallet-form'
 import { ExchangeConnections } from '@/components/exchanges/exchange-connections'
 import { GainsLossesView } from '@/components/gains/gains-losses-view'
 import { PortfolioSnapshot } from '@/components/portfolio/portfolio-snapshot'
+import { DocumentRequestsList } from '@/components/document-requests/document-requests-list'
 import { format } from 'date-fns'
-import type { Client, Wallet, Document, Transaction, Case, Blockchain, DocumentType, DocumentStatus, TransactionType, TransactionSource, CaseStatus, RiskLevel } from '@prisma/client'
+import type { Client, Wallet, Document, Transaction, Case, Blockchain, DocumentType, DocumentStatus, TransactionType, TransactionSource, CaseStatus, RiskLevel, DocumentRequestStatus } from '@prisma/client'
 import { deleteWallet, verifyWallet, getWalletProofDocuments } from './wallets/actions'
 import {
   addExchangeConnection,
@@ -32,6 +33,12 @@ import {
   syncExchangeConnection,
   testExchangeCredentials,
 } from './exchanges/actions'
+import {
+  createDocumentRequest,
+  cancelDocumentRequest,
+  processDocumentRequest,
+  resendDocumentRequestEmail,
+} from './document-requests/actions'
 import type { ExchangeTypeValue } from '@/lib/validators/exchange'
 
 interface DocumentWithVerifier extends Document {
@@ -63,6 +70,31 @@ interface ExchangeConnectionData {
   createdAt: Date
 }
 
+interface DocumentRequestData {
+  id: string
+  title: string
+  description: string | null
+  category: DocumentType
+  status: DocumentRequestStatus
+  priority: string
+  dueDate: Date | null
+  notes: string | null
+  createdAt: Date
+  emailSentAt: Date | null
+  requestedBy: {
+    id: string
+    name: string
+    email: string
+  } | null
+  document: {
+    id: string
+    filename: string
+    originalName: string
+    status: string
+    createdAt: Date
+  } | null
+}
+
 interface ClientTabsProps {
   client: Client & {
     wallets: Wallet[]
@@ -72,6 +104,8 @@ interface ClientTabsProps {
   }
   documentChecklist: DocumentChecklistData
   exchangeConnections: ExchangeConnectionData[]
+  documentRequests: DocumentRequestData[]
+  hasPortalAccount: boolean
 }
 
 const STATUS_FILTER_OPTIONS = [
@@ -81,7 +115,7 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'REJECTED', label: 'Rejected' },
 ]
 
-export function ClientTabs({ client, documentChecklist, exchangeConnections }: ClientTabsProps) {
+export function ClientTabs({ client, documentChecklist, exchangeConnections, documentRequests, hasPortalAccount }: ClientTabsProps) {
   const router = useRouter()
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [previewDocument, setPreviewDocument] = useState<DocumentWithVerifier | null>(null)
@@ -214,6 +248,7 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections }: C
         <TabsTrigger value="wallets">Wallets ({client.wallets.length})</TabsTrigger>
         <TabsTrigger value="exchanges">Exchanges ({exchangeConnections.length})</TabsTrigger>
         <TabsTrigger value="documents">Documents ({client.documents.length})</TabsTrigger>
+        <TabsTrigger value="requests">Requests ({documentRequests.length})</TabsTrigger>
         <TabsTrigger value="transactions">Transactions</TabsTrigger>
         <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
         <TabsTrigger value="gains">Gains/Losses</TabsTrigger>
@@ -483,6 +518,20 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections }: C
             </Card>
           )}
         </div>
+      </TabsContent>
+
+      <TabsContent value="requests">
+        <DocumentRequestsList
+          clientId={client.id}
+          clientName={client.name}
+          clientEmail={client.email}
+          hasPortalAccount={hasPortalAccount}
+          requests={documentRequests}
+          onCreateRequest={createDocumentRequest}
+          onCancelRequest={cancelDocumentRequest}
+          onProcessRequest={processDocumentRequest}
+          onResendEmail={resendDocumentRequestEmail}
+        />
       </TabsContent>
 
       <TabsContent value="transactions">

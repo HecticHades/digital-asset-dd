@@ -5,6 +5,7 @@ import { DocumentType, DocumentStatus } from '@prisma/client'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
+import { sendDocumentSubmittedNotification } from '@/lib/email/document-request'
 
 // Allowed MIME types
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
 
     const file = formData.get('file') as File | null
     const category = formData.get('category') as DocumentType | null
+    const requestId = formData.get('requestId') as string | null
 
     // Validate required fields
     if (!file) {
@@ -110,6 +112,50 @@ export async function POST(request: NextRequest) {
         organizationId: organizationId,
       },
     })
+
+    // If this upload is in response to a document request, update the request
+    if (requestId) {
+      const documentRequest = await prisma.documentRequest.findFirst({
+        where: {
+          id: requestId,
+          clientId: clientId,
+          status: { in: ['PENDING', 'REJECTED'] },
+        },
+        include: {
+          requestedBy: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      })
+
+      if (documentRequest) {
+        // Update the request status to SUBMITTED and link the document
+        await prisma.documentRequest.update({
+          where: { id: requestId },
+          data: {
+            status: 'SUBMITTED',
+            documentId: document.id,
+          },
+        })
+
+        // Send email notification to the analyst who created the request
+        if (documentRequest.requestedBy?.email) {
+          try {
+            await sendDocumentSubmittedNotification({
+              analystEmail: documentRequest.requestedBy.email,
+              analystName: documentRequest.requestedBy.name || 'Analyst',
+              clientName: client.name,
+              clientId: clientId,
+              requestTitle: documentRequest.title,
+              documentType: documentRequest.category,
+              userId: documentRequest.requestedBy.id,
+            })
+          } catch (emailError) {
+            console.error('Failed to send document submitted email:', emailError)
+          }
+        }
+      }
+    }
 
     // Notify the assigned analyst about the new document upload
     const activeCase = await prisma.case.findFirst({
