@@ -21,7 +21,7 @@ import {
   getActionColor,
   type AuditAction,
   type EntityType,
-} from '@/lib/audit'
+} from '@/lib/audit-shared'
 
 interface AuditLogEntry {
   id: string

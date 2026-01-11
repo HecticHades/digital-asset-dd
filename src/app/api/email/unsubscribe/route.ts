@@ -118,8 +118,8 @@ export async function GET(request: Request) {
   }
 }
 
-// Helper function to generate unsubscribe token (export for use in email templates)
-export function generateUnsubscribeToken(userId: string): string {
+// Helper function to generate unsubscribe token
+function generateUnsubscribeToken(userId: string): string {
   const timestamp = Date.now()
   const hash = crypto
     .createHmac('sha256', process.env.NEXTAUTH_SECRET || 'fallback-secret')

@@ -147,7 +147,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
 }
 
 // Client info card for Overview tab
-export function ClientInfoCard({ client }: { client: { phone?: string | null; address?: string | null; notes?: string | null; createdAt: Date; updatedAt: Date } }) {
+function ClientInfoCard({ client }: { client: { phone?: string | null; address?: string | null; notes?: string | null; createdAt: Date; updatedAt: Date } }) {
   return (
     <Card>
       <CardHeader>

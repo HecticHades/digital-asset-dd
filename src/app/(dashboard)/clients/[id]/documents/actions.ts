@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { DocumentStatus, DocumentType } from '@prisma/client'
+import { REQUIRED_DOCUMENT_TYPES } from '@/lib/document-constants'
 
 // TODO: Replace with actual user from session once auth is implemented
 const TEMP_USER_ID = 'temp-user-id'
@@ -78,14 +79,6 @@ export async function getDocumentById(documentId: string) {
     },
   })
 }
-
-// Required document types for due diligence
-export const REQUIRED_DOCUMENT_TYPES: DocumentType[] = [
-  'ID',
-  'PROOF_OF_ADDRESS',
-  'SOURCE_OF_WEALTH',
-  'SOURCE_OF_FUNDS',
-]
 
 // Get document checklist status for a client
 export async function getDocumentChecklistStatus(clientId: string) {
