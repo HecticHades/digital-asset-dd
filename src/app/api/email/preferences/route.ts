@@ -3,6 +3,8 @@ import { getToken } from 'next-auth/jwt'
 import { prisma } from '@/lib/db'
 import { updateEmailPreferencesSchema } from '@/lib/validators/notification'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/email/preferences - Get email preferences
 export async function GET(request: Request) {
   try {

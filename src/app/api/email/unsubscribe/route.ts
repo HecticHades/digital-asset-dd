@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import crypto from 'crypto'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/email/unsubscribe?token=xxx&type=all|digest|specific
 // This endpoint handles unsubscribe links from emails
 export async function GET(request: Request) {

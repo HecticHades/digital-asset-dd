@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AuditLogViewer } from './audit-log-viewer'
 import { fetchAuditLogs, fetchAuditLogUsers, exportAuditLogs } from './actions'
 
+// Force dynamic rendering - this page fetches from database
+export const dynamic = 'force-dynamic'
+
 export default async function AuditLogsPage() {
   // Fetch initial data
   const [logsResult, users] = await Promise.all([

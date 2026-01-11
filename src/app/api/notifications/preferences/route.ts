@@ -3,6 +3,8 @@ import { getToken } from 'next-auth/jwt'
 import { getOrCreatePreferences, updatePreferences } from '@/lib/notifications'
 import { updateNotificationPreferencesSchema } from '@/lib/validators/notification'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/notifications/preferences - Get notification preferences
 export async function GET(request: NextRequest) {
   try {

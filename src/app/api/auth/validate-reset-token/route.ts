@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateResetToken } from '@/lib/password-reset'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const token = request.nextUrl.searchParams.get('token')
