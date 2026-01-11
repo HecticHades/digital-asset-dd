@@ -7,7 +7,7 @@
       "id": "US-001",
       "title": "Initialize Next.js app structure",
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create tsconfig.json, next.config.js, tailwind.config.ts, postcss.config.js",
         "Create src/app/layout.tsx and src/app/globals.css",
