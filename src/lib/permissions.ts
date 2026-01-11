@@ -46,7 +46,9 @@ export type Permission =
   | 'reports:generate'
   // Settings permissions
   | 'settings:read'
+  | 'settings:write'
   | 'settings:update'
+  | 'settings:delete'
   // User management permissions
   | 'users:read'
   | 'users:create'
@@ -83,7 +85,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'findings:read', 'findings:create', 'findings:update', 'findings:resolve',
     'checklist:read', 'checklist:update',
     'reports:read', 'reports:generate',
-    'settings:read', 'settings:update',
+    'settings:read', 'settings:write', 'settings:update', 'settings:delete',
     'users:read', 'users:create', 'users:update', 'users:delete', 'users:invite',
     'audit:read',
     'organization:read', 'organization:update',
@@ -101,7 +103,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'findings:read', 'findings:create', 'findings:update', 'findings:resolve',
     'checklist:read', 'checklist:update',
     'reports:read', 'reports:generate',
-    'settings:read', 'settings:update',
+    'settings:read', 'settings:write', 'settings:update', 'settings:delete',
     'users:read', 'users:create', 'users:update', 'users:delete', 'users:invite',
     'audit:read',
     'organization:read', 'organization:update',

@@ -152,6 +152,7 @@ model Organization {
   deletionLogs        DeletionLog[]
   notifications       Notification[]
   documentRequests    DocumentRequest[]
+  apiKeys             ApiKey[]
 
   @@map("organizations")
 }
@@ -189,6 +190,7 @@ model User {
   notificationPreferences  NotificationPreference?
   portalMessages           PortalMessage[] @relation("StaffMessages")
   documentRequests         DocumentRequest[] @relation("DocumentRequestsCreated")
+  apiKeys                  ApiKey[] @relation("ApiKeysCreated")
 
   @@index([organizationId])
   @@index([email])
@@ -804,6 +806,59 @@ model PortalMessage {
   @@index([staffUserId])
   @@index([createdAt])
   @@map("portal_messages")
+}
+
+// ============================================
+// API KEYS
+// ============================================
+
+model ApiKey {
+  id              String   @id @default(cuid())
+  name            String   // Descriptive name for the API key
+  keyHash         String   @unique // SHA-256 hash of the API key (never store raw key)
+  keyPrefix       String   // First 8 chars of the key for identification (e.g., "dd_sk_abc...")
+  scopes          String[] @default(["read"]) // Permissions: read, write, delete
+  isActive        Boolean  @default(true)
+  expiresAt       DateTime? // Optional expiration date
+  lastUsedAt      DateTime?
+  requestCount    Int      @default(0) // Total requests made with this key
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Tenant isolation - API keys scoped to organization
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Created by user
+  createdById String?
+  createdBy   User?   @relation("ApiKeysCreated", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // API key usage logs
+  usageLogs ApiKeyUsageLog[]
+
+  @@index([organizationId])
+  @@index([keyHash])
+  @@index([keyPrefix])
+  @@map("api_keys")
+}
+
+model ApiKeyUsageLog {
+  id         String   @id @default(cuid())
+  endpoint   String   // API endpoint accessed
+  method     String   // HTTP method
+  statusCode Int      // Response status code
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  // API key relation
+  apiKeyId String
+  apiKey   ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@index([apiKeyId])
+  @@index([timestamp])
+  @@index([endpoint])
+  @@map("api_key_usage_logs")
 }
 
 // ============================================
