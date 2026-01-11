@@ -439,7 +439,7 @@
       "id": "US-030",
       "title": "Data retention policies",
       "priority": 33,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Configure retention period per data type in settings",
         "Archive old cases (move to archive table)",
