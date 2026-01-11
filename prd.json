@@ -452,7 +452,7 @@
       "id": "US-034",
       "title": "Organization/Tenant management",
       "priority": 34,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create Organization model with settings",
         "Super-admin can create new organizations",
