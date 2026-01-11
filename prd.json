@@ -98,7 +98,7 @@
       "id": "US-008",
       "title": "Create CEX upload component",
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/components/uploads/cex-upload.tsx",
         "Drag-and-drop zone for CSV files",
