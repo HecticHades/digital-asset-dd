@@ -530,7 +530,7 @@
       "id": "US-040",
       "title": "REST API for integrations",
       "priority": 40,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "API key management in settings",
         "Create src/app/api/v1/* endpoints",
