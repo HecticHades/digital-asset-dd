@@ -45,7 +45,7 @@
       "id": "US-004",
       "title": "Create dashboard layout",
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/components/layout/sidebar.tsx with nav links",
         "Create src/components/layout/header.tsx with user menu",
