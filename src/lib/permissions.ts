@@ -58,6 +58,8 @@ export type Permission =
   // Organization permissions
   | 'organization:read'
   | 'organization:update'
+  // Super admin permissions
+  | 'organizations:manage'   // Create/manage multiple organizations (super admin only)
   // Manager-specific
   | 'workload:view'         // View workload dashboard
 
@@ -71,8 +73,26 @@ export type Permission =
  * AUDITOR: Read-only access to all data
  */
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  SUPER_ADMIN: [
+    // Super admin has full access including multi-org management
+    'clients:read', 'clients:create', 'clients:update', 'clients:delete',
+    'cases:read', 'cases:read:all', 'cases:create', 'cases:update', 'cases:delete', 'cases:assign', 'cases:review', 'cases:submit',
+    'documents:read', 'documents:upload', 'documents:verify', 'documents:delete',
+    'wallets:read', 'wallets:create', 'wallets:verify', 'wallets:delete', 'wallets:screen', 'wallets:sync',
+    'transactions:read', 'transactions:import',
+    'findings:read', 'findings:create', 'findings:update', 'findings:resolve',
+    'checklist:read', 'checklist:update',
+    'reports:read', 'reports:generate',
+    'settings:read', 'settings:update',
+    'users:read', 'users:create', 'users:update', 'users:delete', 'users:invite',
+    'audit:read',
+    'organization:read', 'organization:update',
+    'organizations:manage',  // Super admin exclusive
+    'workload:view',
+  ],
+
   ADMIN: [
-    // Admin has full access to everything
+    // Admin has full access to everything within their organization
     'clients:read', 'clients:create', 'clients:update', 'clients:delete',
     'cases:read', 'cases:read:all', 'cases:create', 'cases:update', 'cases:delete', 'cases:assign', 'cases:review', 'cases:submit',
     'documents:read', 'documents:upload', 'documents:verify', 'documents:delete',
@@ -244,6 +264,7 @@ export function canAccessRoute(role: UserRole | string, path: string): boolean {
  * Role display labels
  */
 export const ROLE_LABELS: Record<UserRole, string> = {
+  SUPER_ADMIN: 'Super Administrator',
   ADMIN: 'Administrator',
   MANAGER: 'Manager',
   ANALYST: 'Analyst',
@@ -255,6 +276,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
  * Role descriptions for UI
  */
 export const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
+  SUPER_ADMIN: 'Platform administrator with ability to create and manage multiple organizations',
   ADMIN: 'Full access to all features including user management and organization settings',
   MANAGER: 'Can oversee all cases, assign analysts, and manage workload',
   ANALYST: 'Can conduct investigations on assigned cases, import data, and analyze',
