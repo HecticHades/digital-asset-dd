@@ -504,7 +504,7 @@
       "id": "US-038",
       "title": "Client self-service portal",
       "priority": 38,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Separate client login at /portal",
         "Client sees their document checklist",
