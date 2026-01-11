@@ -691,6 +691,7 @@ model Notification {
 
 model NotificationPreference {
   id                    String   @id @default(cuid())
+  // In-app notification preferences
   caseAssigned          Boolean  @default(true)
   caseStatusChanged     Boolean  @default(true)
   newRiskFlag           Boolean  @default(true)
@@ -699,6 +700,18 @@ model NotificationPreference {
   caseApproved          Boolean  @default(true)
   caseRejected          Boolean  @default(true)
   commentAdded          Boolean  @default(true)
+
+  // Email notification preferences
+  emailEnabled          Boolean  @default(true)
+  emailCaseAssigned     Boolean  @default(true)
+  emailDeadlineReminder Boolean  @default(true)
+  emailHighRiskFlag     Boolean  @default(true)
+
+  // Digest preferences
+  digestEnabled         Boolean  @default(false)
+  digestFrequency       String   @default("WEEKLY") // DAILY or WEEKLY
+  lastDigestSentAt      DateTime?
+
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
@@ -707,4 +720,29 @@ model NotificationPreference {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
+}
+
+// ============================================
+// EMAIL
+// ============================================
+
+model EmailLog {
+  id          String   @id @default(cuid())
+  toEmail     String
+  toName      String?
+  subject     String
+  template    String   // Template name used
+  status      String   @default("SENT") // SENT, FAILED, BOUNCED
+  errorMessage String?
+  messageId   String?  // External email provider message ID
+  sentAt      DateTime @default(now())
+
+  // User relation (optional, for tracking)
+  userId      String?
+
+  @@index([toEmail])
+  @@index([userId])
+  @@index([sentAt])
+  @@index([status])
+  @@map("email_logs")
 }

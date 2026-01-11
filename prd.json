@@ -491,7 +491,7 @@
       "id": "US-037",
       "title": "Email notifications",
       "priority": 37,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Email on: case assignment, deadline reminder, high-risk flag",
         "Daily/weekly digest option",

@@ -1,5 +1,11 @@
 import { prisma } from '@/lib/db'
 import { NotificationType as NotificationTypeEnum } from '@prisma/client'
+import {
+  sendCaseAssignmentEmail,
+  sendHighRiskFlagEmail,
+  sendDeadlineReminderEmail,
+  isEmailConfigured,
+} from '@/lib/email'
 
 // ============================================
 // Types
@@ -251,8 +257,11 @@ export async function notifyCaseAssigned(params: {
   assignedToId: string
   assignedByName: string
   organizationId: string
+  clientName?: string
+  dueDate?: Date | null
 }) {
-  return createNotification({
+  // Create in-app notification
+  const notification = await createNotification({
     type: 'CASE_ASSIGNED',
     title: 'Case Assigned',
     message: `You have been assigned to case "${params.caseTitle}" by ${params.assignedByName}`,
@@ -261,6 +270,31 @@ export async function notifyCaseAssigned(params: {
     organizationId: params.organizationId,
     caseId: params.caseId,
   })
+
+  // Send email notification (async, don't block)
+  if (isEmailConfigured()) {
+    // Get user details for email
+    const user = await prisma.user.findUnique({
+      where: { id: params.assignedToId },
+      select: { id: true, email: true, name: true },
+    })
+
+    if (user) {
+      // Fire and forget - don't await
+      sendCaseAssignmentEmail({
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        caseId: params.caseId,
+        caseTitle: params.caseTitle,
+        clientName: params.clientName || 'Unknown Client',
+        assignedByName: params.assignedByName,
+        dueDate: params.dueDate,
+      }).catch(err => console.error('[Email] Failed to send case assignment email:', err))
+    }
+  }
+
+  return notification
 }
 
 /**
@@ -302,11 +336,14 @@ export async function notifyNewRiskFlag(params: {
   caseTitle: string
   findingId: string
   findingTitle: string
+  findingDescription?: string
   severity: string
   userId: string
   organizationId: string
+  clientName?: string
 }) {
-  return createNotification({
+  // Create in-app notification
+  const notification = await createNotification({
     type: 'NEW_RISK_FLAG',
     title: `${params.severity} Risk Flag Detected`,
     message: `New ${params.severity.toLowerCase()} risk flag "${params.findingTitle}" detected in case "${params.caseTitle}"`,
@@ -316,6 +353,32 @@ export async function notifyNewRiskFlag(params: {
     caseId: params.caseId,
     findingId: params.findingId,
   })
+
+  // Send email for HIGH and CRITICAL severity (async, don't block)
+  if (isEmailConfigured() && (params.severity === 'HIGH' || params.severity === 'CRITICAL')) {
+    // Get user details for email
+    const user = await prisma.user.findUnique({
+      where: { id: params.userId },
+      select: { id: true, email: true, name: true },
+    })
+
+    if (user) {
+      // Fire and forget - don't await
+      sendHighRiskFlagEmail({
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        caseId: params.caseId,
+        caseTitle: params.caseTitle,
+        clientName: params.clientName || 'Unknown Client',
+        flagTitle: params.findingTitle,
+        flagDescription: params.findingDescription || '',
+        severity: params.severity,
+      }).catch(err => console.error('[Email] Failed to send high risk flag email:', err))
+    }
+  }
+
+  return notification
 }
 
 /**
@@ -327,12 +390,14 @@ export async function notifyDeadlineApproaching(params: {
   dueDate: Date
   userId: string
   organizationId: string
+  clientName?: string
 }) {
   const daysUntilDue = Math.ceil(
     (params.dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   )
 
-  return createNotification({
+  // Create in-app notification
+  const notification = await createNotification({
     type: 'DEADLINE_APPROACHING',
     title: 'Deadline Approaching',
     message: `Case "${params.caseTitle}" is due in ${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'}`,
@@ -341,6 +406,31 @@ export async function notifyDeadlineApproaching(params: {
     organizationId: params.organizationId,
     caseId: params.caseId,
   })
+
+  // Send email notification (async, don't block)
+  if (isEmailConfigured()) {
+    // Get user details for email
+    const user = await prisma.user.findUnique({
+      where: { id: params.userId },
+      select: { id: true, email: true, name: true },
+    })
+
+    if (user) {
+      // Fire and forget - don't await
+      sendDeadlineReminderEmail({
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        caseId: params.caseId,
+        caseTitle: params.caseTitle,
+        clientName: params.clientName || 'Unknown Client',
+        dueDate: params.dueDate,
+        daysUntilDue,
+      }).catch(err => console.error('[Email] Failed to send deadline reminder email:', err))
+    }
+  }
+
+  return notification
 }
 
 /**

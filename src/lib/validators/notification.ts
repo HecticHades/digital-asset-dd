@@ -28,7 +28,7 @@ export const createNotificationSchema = z.object({
 
 export type CreateNotificationInput = z.infer<typeof createNotificationSchema>
 
-// Update notification preferences schema
+// Update notification preferences schema (in-app)
 export const updateNotificationPreferencesSchema = z.object({
   caseAssigned: z.boolean().optional(),
   caseStatusChanged: z.boolean().optional(),
@@ -41,6 +41,23 @@ export const updateNotificationPreferencesSchema = z.object({
 })
 
 export type UpdateNotificationPreferencesInput = z.infer<typeof updateNotificationPreferencesSchema>
+
+// Email notification preferences schema
+export const updateEmailPreferencesSchema = z.object({
+  emailEnabled: z.boolean().optional(),
+  emailCaseAssigned: z.boolean().optional(),
+  emailDeadlineReminder: z.boolean().optional(),
+  emailHighRiskFlag: z.boolean().optional(),
+  digestEnabled: z.boolean().optional(),
+  digestFrequency: z.enum(['DAILY', 'WEEKLY']).optional(),
+})
+
+export type UpdateEmailPreferencesInput = z.infer<typeof updateEmailPreferencesSchema>
+
+// Combined preferences schema
+export const updateAllPreferencesSchema = updateNotificationPreferencesSchema.merge(updateEmailPreferencesSchema)
+
+export type UpdateAllPreferencesInput = z.infer<typeof updateAllPreferencesSchema>
 
 // Notification preference labels for UI
 export const NOTIFICATION_PREFERENCE_LABELS: Record<string, { label: string; description: string }> = {
@@ -118,3 +135,25 @@ export function getNotificationColor(type: NotificationTypeEnum): string {
       return 'text-slate-600'
   }
 }
+
+// Email preference labels for UI
+export const EMAIL_PREFERENCE_LABELS: Record<string, { label: string; description: string }> = {
+  emailCaseAssigned: {
+    label: 'Case Assignment',
+    description: 'Receive an email when a case is assigned to you',
+  },
+  emailDeadlineReminder: {
+    label: 'Deadline Reminders',
+    description: 'Receive email reminders when case deadlines are approaching',
+  },
+  emailHighRiskFlag: {
+    label: 'High Risk Flags',
+    description: 'Receive an email when high or critical risk flags are detected',
+  },
+}
+
+// Digest frequency options
+export const DIGEST_FREQUENCY_OPTIONS = [
+  { value: 'DAILY', label: 'Daily', description: 'Receive a summary every day' },
+  { value: 'WEEKLY', label: 'Weekly', description: 'Receive a summary every week' },
+] as const
