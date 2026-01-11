@@ -150,6 +150,7 @@ model Organization {
   retentionPolicy     RetentionPolicy?
   archivedCases       ArchivedCase[]
   deletionLogs        DeletionLog[]
+  notifications       Notification[]
 
   @@map("organizations")
 }
@@ -183,6 +184,8 @@ model User {
   passwordResetTokens      PasswordResetToken[]
   sentInvitations          UserInvitation[]     @relation("InvitedBy")
   createdExchangeConnections ExchangeConnection[] @relation("CreatedExchangeConnection")
+  notifications            Notification[]
+  notificationPreferences  NotificationPreference?
 
   @@index([organizationId])
   @@index([email])
@@ -639,4 +642,69 @@ model DeletionLog {
   @@index([entityType])
   @@index([deletedAt])
   @@map("deletion_logs")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+enum NotificationType {
+  CASE_ASSIGNED
+  CASE_STATUS_CHANGED
+  NEW_RISK_FLAG
+  DEADLINE_APPROACHING
+  DOCUMENT_UPLOADED
+  CASE_APPROVED
+  CASE_REJECTED
+  COMMENT_ADDED
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  link      String?          // URL to navigate to
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  // Related entities (optional)
+  caseId    String?
+  clientId  String?
+  findingId String?
+
+  // User who receives the notification
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id                    String   @id @default(cuid())
+  caseAssigned          Boolean  @default(true)
+  caseStatusChanged     Boolean  @default(true)
+  newRiskFlag           Boolean  @default(true)
+  deadlineApproaching   Boolean  @default(true)
+  documentUploaded      Boolean  @default(true)
+  caseApproved          Boolean  @default(true)
+  caseRejected          Boolean  @default(true)
+  commentAdded          Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // One preference record per user
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }
