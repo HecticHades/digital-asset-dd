@@ -205,7 +205,7 @@
       "id": "US-016",
       "title": "On-chain transaction fetching",
       "priority": 16,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/lib/blockchain/etherscan.ts for EVM chains",
         "Create src/lib/blockchain/blockchair.ts for Bitcoin",
