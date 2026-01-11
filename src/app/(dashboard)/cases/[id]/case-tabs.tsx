@@ -13,7 +13,9 @@ import {
 } from '@/components/ui/table'
 import { format } from 'date-fns'
 import { RiskBreakdown } from '@/components/risk/risk-breakdown'
+import { FindingsList } from '@/components/findings/findings-list'
 import type { RiskBreakdown as RiskBreakdownType } from '@/lib/analyzers/risk'
+import type { FindingSeverity, FindingCategory } from '@/lib/validators/finding'
 
 interface Finding {
   id: string
@@ -25,6 +27,22 @@ interface Finding {
   resolution: string | null
   createdAt: string
   resolvedAt: string | null
+  wallet?: {
+    id: string
+    address: string
+    blockchain: string
+    label: string | null
+  } | null
+  transaction?: {
+    id: string
+    txHash: string | null
+    type: string
+    asset: string
+  } | null
+  resolvedBy?: {
+    id: string
+    name: string
+  } | null
 }
 
 interface ChecklistItem {
@@ -82,23 +100,15 @@ interface CaseTabsProps {
   caseData: CaseData
   timeline: TimelineEvent[]
   riskBreakdown: RiskBreakdownType
-}
-
-function getSeverityColor(severity: string) {
-  switch (severity) {
-    case 'CRITICAL':
-      return 'bg-red-100 text-red-800'
-    case 'HIGH':
-      return 'bg-orange-100 text-orange-800'
-    case 'MEDIUM':
-      return 'bg-yellow-100 text-yellow-800'
-    case 'LOW':
-      return 'bg-blue-100 text-blue-800'
-    case 'INFO':
-      return 'bg-slate-100 text-slate-800'
-    default:
-      return 'bg-slate-100 text-slate-800'
-  }
+  onCreateFinding: (data: {
+    title: string
+    description?: string
+    severity: FindingSeverity
+    category: FindingCategory
+    caseId: string
+  }) => Promise<{ success: boolean; error?: string }>
+  onResolveFinding: (id: string, resolution: string) => Promise<{ success: boolean; error?: string }>
+  onReopenFinding: (id: string) => Promise<{ success: boolean; error?: string }>
 }
 
 function getTimelineIcon(type: string) {
@@ -146,13 +156,25 @@ function getTimelineIcon(type: string) {
   }
 }
 
-export function CaseTabs({ caseData, timeline, riskBreakdown }: CaseTabsProps) {
+export function CaseTabs({
+  caseData,
+  timeline,
+  riskBreakdown,
+  onCreateFinding,
+  onResolveFinding,
+  onReopenFinding,
+}: CaseTabsProps) {
+  const openFindingsCount = caseData.findings.filter((f) => !f.isResolved).length
+
   return (
     <Tabs defaultValue="overview">
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="risk">Risk Assessment</TabsTrigger>
-        <TabsTrigger value="findings">Findings ({caseData.findings.length})</TabsTrigger>
+        <TabsTrigger value="findings">
+          Findings ({openFindingsCount}
+          {caseData.findings.length > openFindingsCount && ` / ${caseData.findings.length}`})
+        </TabsTrigger>
         <TabsTrigger value="checklist">Checklist</TabsTrigger>
         <TabsTrigger value="reports">Reports ({caseData.reports.length})</TabsTrigger>
         <TabsTrigger value="timeline">Timeline</TabsTrigger>
@@ -211,64 +233,13 @@ export function CaseTabs({ caseData, timeline, riskBreakdown }: CaseTabsProps) {
       </TabsContent>
 
       <TabsContent value="findings">
-        {caseData.findings.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
-            <svg
-              className="mx-auto h-12 w-12 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <h3 className="mt-4 text-lg font-medium text-slate-900">No findings yet</h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Findings will appear here as the case is analyzed.
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg border border-slate-200">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Severity</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {caseData.findings.map((finding) => (
-                  <TableRow key={finding.id}>
-                    <TableCell className="font-medium">{finding.title}</TableCell>
-                    <TableCell>
-                      <Badge variant="default">{finding.category}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getSeverityColor(finding.severity)}`}>
-                        {finding.severity}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {finding.isResolved ? (
-                        <Badge variant="success">Resolved</Badge>
-                      ) : (
-                        <Badge variant="warning">Open</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>{format(new Date(finding.createdAt), 'MMM d, yyyy')}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        <FindingsList
+          findings={caseData.findings}
+          caseId={caseData.id}
+          onCreateFinding={onCreateFinding}
+          onResolveFinding={onResolveFinding}
+          onReopenFinding={onReopenFinding}
+        />
       </TabsContent>
 
       <TabsContent value="checklist">

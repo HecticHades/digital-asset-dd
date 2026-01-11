@@ -7,6 +7,8 @@ import { StatusBadge, RiskBadge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { CaseTabs } from './case-tabs'
 import { calculateRiskBreakdown, getRiskScoreColor } from '@/lib/analyzers/risk'
+import { createFinding, resolveFinding, reopenFinding } from './findings/actions'
+import type { FindingSeverity, FindingCategory } from '@/lib/validators/finding'
 
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
@@ -45,9 +47,35 @@ async function getCase(id: string) {
           },
         },
         findings: {
-          orderBy: {
-            createdAt: 'desc',
+          include: {
+            wallet: {
+              select: {
+                id: true,
+                address: true,
+                blockchain: true,
+                label: true,
+              },
+            },
+            transaction: {
+              select: {
+                id: true,
+                txHash: true,
+                type: true,
+                asset: true,
+              },
+            },
+            resolvedBy: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
+          orderBy: [
+            { isResolved: 'asc' },
+            { severity: 'desc' },
+            { createdAt: 'desc' },
+          ],
         },
         checklistItems: {
           orderBy: {
@@ -284,7 +312,29 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
       </div>
 
       {/* Tabs */}
-      <CaseTabs caseData={serializedCase} timeline={serializedTimeline} riskBreakdown={riskBreakdown} />
+      <CaseTabs
+        caseData={serializedCase}
+        timeline={serializedTimeline}
+        riskBreakdown={riskBreakdown}
+        onCreateFinding={async (data: {
+          title: string
+          description?: string
+          severity: FindingSeverity
+          category: FindingCategory
+          caseId: string
+        }) => {
+          'use server'
+          return createFinding(data)
+        }}
+        onResolveFinding={async (findingId: string, resolution: string) => {
+          'use server'
+          return resolveFinding(findingId, { resolution })
+        }}
+        onReopenFinding={async (findingId: string) => {
+          'use server'
+          return reopenFinding(findingId)
+        }}
+      />
     </div>
   )
 }

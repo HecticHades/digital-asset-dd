@@ -232,7 +232,7 @@
       "id": "US-023",
       "title": "Risk flag management",
       "priority": 18,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Auto-generate flags from analysis (sanctions, mixer, etc.)",
         "Manual flag creation by analyst",
