@@ -344,7 +344,7 @@
       "id": "US-033",
       "title": "User management (Admin)",
       "priority": 26,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/app/(dashboard)/settings/users/page.tsx",
         "List all users in organization",
