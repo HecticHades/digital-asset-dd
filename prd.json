@@ -425,7 +425,7 @@
       "id": "US-029",
       "title": "Audit logging",
       "priority": 32,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Log all user actions: create, update, delete, view",
         "Log fields: user_id, action, entity_type, entity_id, details, timestamp, ip_address",
