@@ -31,7 +31,7 @@
       "id": "US-003",
       "title": "Create base UI components",
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/components/ui/button.tsx with variants (primary, secondary, destructive, outline)",
         "Create src/components/ui/input.tsx with label and error states",
