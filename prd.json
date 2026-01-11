@@ -259,7 +259,7 @@
       "id": "US-025",
       "title": "Case approval workflow",
       "priority": 20,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Analyst submits case for review (changes status to Pending Review)",
         "Compliance officer sees pending cases in their view",
