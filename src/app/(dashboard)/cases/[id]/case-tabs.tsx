@@ -12,6 +12,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { format } from 'date-fns'
+import { RiskBreakdown } from '@/components/risk/risk-breakdown'
+import type { RiskBreakdown as RiskBreakdownType } from '@/lib/analyzers/risk'
 
 interface Finding {
   id: string
@@ -79,6 +81,7 @@ interface TimelineEvent {
 interface CaseTabsProps {
   caseData: CaseData
   timeline: TimelineEvent[]
+  riskBreakdown: RiskBreakdownType
 }
 
 function getSeverityColor(severity: string) {
@@ -143,11 +146,12 @@ function getTimelineIcon(type: string) {
   }
 }
 
-export function CaseTabs({ caseData, timeline }: CaseTabsProps) {
+export function CaseTabs({ caseData, timeline, riskBreakdown }: CaseTabsProps) {
   return (
     <Tabs defaultValue="overview">
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="risk">Risk Assessment</TabsTrigger>
         <TabsTrigger value="findings">Findings ({caseData.findings.length})</TabsTrigger>
         <TabsTrigger value="checklist">Checklist</TabsTrigger>
         <TabsTrigger value="reports">Reports ({caseData.reports.length})</TabsTrigger>
@@ -200,6 +204,10 @@ export function CaseTabs({ caseData, timeline }: CaseTabsProps) {
             </CardContent>
           </Card>
         </div>
+      </TabsContent>
+
+      <TabsContent value="risk">
+        <RiskBreakdown breakdown={riskBreakdown} />
       </TabsContent>
 
       <TabsContent value="findings">

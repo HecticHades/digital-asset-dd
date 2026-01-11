@@ -139,7 +139,7 @@
       "id": "US-011",
       "title": "Create risk scoring system",
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/lib/analyzers/risk.ts",
         "Calculate overall risk score 0-100",

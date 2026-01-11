@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge, RiskBadge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { CaseTabs } from './case-tabs'
+import { calculateRiskBreakdown, getRiskScoreColor } from '@/lib/analyzers/risk'
 
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
@@ -104,6 +105,15 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
   // Sort timeline by date
   timelineEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
+  // Calculate risk breakdown from findings
+  const riskBreakdown = calculateRiskBreakdown(
+    caseData.findings.map((f) => ({
+      category: f.category,
+      severity: f.severity,
+      isResolved: f.isResolved,
+    }))
+  )
+
   // Serialize for client components
   const serializedCase = {
     ...caseData,
@@ -184,12 +194,13 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold">
-                {caseData.riskScore !== null ? caseData.riskScore : '-'}
+              <span className={`text-2xl font-bold ${getRiskScoreColor(riskBreakdown.overallScore)}`}>
+                {riskBreakdown.overallScore}
               </span>
-              {caseData.riskScore !== null && (
-                <span className="text-sm text-slate-500">/ 100</span>
-              )}
+              <span className="text-sm text-slate-500">/ 100</span>
+            </div>
+            <div className={`text-xs mt-1 ${getRiskScoreColor(riskBreakdown.overallScore)}`}>
+              {riskBreakdown.riskLevel}
             </div>
           </CardContent>
         </Card>
@@ -273,7 +284,7 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
       </div>
 
       {/* Tabs */}
-      <CaseTabs caseData={serializedCase} timeline={serializedTimeline} />
+      <CaseTabs caseData={serializedCase} timeline={serializedTimeline} riskBreakdown={riskBreakdown} />
     </div>
   )
 }
