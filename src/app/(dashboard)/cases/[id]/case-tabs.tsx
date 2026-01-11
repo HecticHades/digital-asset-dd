@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -15,6 +17,7 @@ import { format } from 'date-fns'
 import { RiskBreakdown } from '@/components/risk/risk-breakdown'
 import { FindingsList } from '@/components/findings/findings-list'
 import { ComplianceChecklist } from '@/components/checklist/compliance-checklist'
+import { CaseApprovalModal } from '@/components/approval/case-approval-modal'
 import type { RiskBreakdown as RiskBreakdownType } from '@/lib/analyzers/risk'
 import type { FindingSeverity, FindingCategory } from '@/lib/validators/finding'
 import type { ChecklistCompletionStatus } from '@/lib/validators/checklist'
@@ -122,6 +125,10 @@ interface CaseTabsProps {
   onAddChecklistItem: (data: { title: string; description?: string; isRequired: boolean }) => Promise<{ success: boolean; error?: string }>
   onDeleteChecklistItem: (itemId: string) => Promise<{ success: boolean; error?: string }>
   onSubmitForReview: () => Promise<{ success: boolean; error?: string }>
+  onApproveCase: (caseId: string, comment: string) => Promise<{ success: boolean; error?: string }>
+  onRejectCase: (caseId: string, comment: string) => Promise<{ success: boolean; error?: string }>
+  onReopenRejectedCase: (caseId: string) => Promise<{ success: boolean; error?: string }>
+  onMarkCaseCompleted: (caseId: string) => Promise<{ success: boolean; error?: string }>
 }
 
 function getTimelineIcon(type: string) {
@@ -183,12 +190,166 @@ export function CaseTabs({
   onAddChecklistItem,
   onDeleteChecklistItem,
   onSubmitForReview,
+  onApproveCase,
+  onRejectCase,
+  onReopenRejectedCase,
+  onMarkCaseCompleted,
 }: CaseTabsProps) {
+  const [showApprovalModal, setShowApprovalModal] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+
   const openFindingsCount = caseData.findings.filter((f) => !f.isResolved).length
   const checklistComplete = checklistCompletionStatus.isComplete
 
+  // Determine which actions are available based on case status
+  const canReview = caseData.status === 'PENDING_REVIEW'
+  const canReopen = caseData.status === 'REJECTED'
+  const canComplete = caseData.status === 'APPROVED'
+
+  const handleReopenCase = async () => {
+    setIsProcessing(true)
+    setActionError(null)
+    try {
+      const result = await onReopenRejectedCase(caseData.id)
+      if (!result.success) {
+        setActionError(result.error || 'Failed to reopen case')
+      }
+    } catch {
+      setActionError('An unexpected error occurred')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleMarkCompleted = async () => {
+    setIsProcessing(true)
+    setActionError(null)
+    try {
+      const result = await onMarkCaseCompleted(caseData.id)
+      if (!result.success) {
+        setActionError(result.error || 'Failed to complete case')
+      }
+    } catch {
+      setActionError('An unexpected error occurred')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  // Prepare case data for approval modal
+  const approvalCaseData = {
+    id: caseData.id,
+    title: caseData.title,
+    riskLevel: caseData.riskLevel,
+    riskScore: caseData.riskScore,
+    client: caseData.client,
+    assignedTo: caseData.assignedTo,
+    findings: caseData.findings.filter((f) => !f.isResolved).map((f) => ({
+      id: f.id,
+      severity: f.severity,
+    })),
+    checklistItems: caseData.checklistItems.map((c) => ({
+      id: c.id,
+      isCompleted: c.isCompleted,
+      isRequired: c.isRequired,
+    })),
+  }
+
   return (
-    <Tabs defaultValue="overview">
+    <>
+      {/* Status-based Action Banner */}
+      {(canReview || canReopen || canComplete || caseData.status === 'REJECTED') && (
+        <div className={`mb-6 rounded-lg p-4 ${
+          caseData.status === 'PENDING_REVIEW' ? 'bg-amber-50 border border-amber-200' :
+          caseData.status === 'REJECTED' ? 'bg-red-50 border border-red-200' :
+          caseData.status === 'APPROVED' ? 'bg-green-50 border border-green-200' :
+          'bg-slate-50 border border-slate-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {caseData.status === 'PENDING_REVIEW' && (
+                <>
+                  <ClockIcon className="h-5 w-5 text-amber-500" />
+                  <div>
+                    <p className="font-medium text-amber-800">Case Pending Review</p>
+                    <p className="text-sm text-amber-600">This case is awaiting compliance officer review.</p>
+                  </div>
+                </>
+              )}
+              {caseData.status === 'REJECTED' && (
+                <>
+                  <XCircleIcon className="h-5 w-5 text-red-500" />
+                  <div>
+                    <p className="font-medium text-red-800">Case Rejected</p>
+                    <p className="text-sm text-red-600">
+                      {caseData.reviewNotes ? `Feedback: ${caseData.reviewNotes}` : 'Please address the feedback and resubmit.'}
+                    </p>
+                  </div>
+                </>
+              )}
+              {caseData.status === 'APPROVED' && (
+                <>
+                  <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                  <div>
+                    <p className="font-medium text-green-800">Case Approved</p>
+                    <p className="text-sm text-green-600">
+                      {caseData.reviewedBy ? `Approved by ${caseData.reviewedBy.name}` : 'Ready to be marked as completed.'}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {canReview && (
+                <Button
+                  variant="primary"
+                  onClick={() => setShowApprovalModal(true)}
+                  disabled={isProcessing}
+                >
+                  Review Case
+                </Button>
+              )}
+              {canReopen && (
+                <Button
+                  variant="outline"
+                  onClick={handleReopenCase}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Processing...' : 'Reopen for Revision'}
+                </Button>
+              )}
+              {canComplete && (
+                <Button
+                  variant="primary"
+                  onClick={handleMarkCompleted}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Processing...' : 'Mark as Completed'}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {actionError && (
+            <div className="mt-3 bg-red-100 text-red-700 px-3 py-2 rounded-md text-sm">
+              {actionError}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Case Approval Modal */}
+      <CaseApprovalModal
+        isOpen={showApprovalModal}
+        onClose={() => setShowApprovalModal(false)}
+        caseData={approvalCaseData}
+        onApprove={onApproveCase}
+        onReject={onRejectCase}
+      />
+
+      <Tabs defaultValue="overview">
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="risk">Risk Assessment</TabsTrigger>
@@ -379,5 +540,31 @@ export function CaseTabs({
         </Card>
       </TabsContent>
     </Tabs>
+    </>
+  )
+}
+
+// Icon components
+function ClockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  )
+}
+
+function CheckCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  )
+}
+
+function XCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
   )
 }

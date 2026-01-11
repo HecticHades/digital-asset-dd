@@ -15,7 +15,7 @@ import {
   createChecklistItem,
   deleteChecklistItem,
 } from './checklist/actions'
-import { updateCase } from '../actions'
+import { updateCase, processCaseApproval, reopenRejectedCase, markCaseCompleted } from '../actions'
 import type { FindingSeverity, FindingCategory } from '@/lib/validators/finding'
 import type { ChecklistCompletionStatus } from '@/lib/validators/checklist'
 
@@ -403,6 +403,22 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
             return { success: false, error: 'All required checklist items must be completed before submitting for review' }
           }
           return updateCase(id, { status: 'PENDING_REVIEW' })
+        }}
+        onApproveCase={async (caseId: string, comment: string) => {
+          'use server'
+          return processCaseApproval({ caseId, decision: 'APPROVE', comment })
+        }}
+        onRejectCase={async (caseId: string, comment: string) => {
+          'use server'
+          return processCaseApproval({ caseId, decision: 'REJECT', comment })
+        }}
+        onReopenRejectedCase={async (caseId: string) => {
+          'use server'
+          return reopenRejectedCase(caseId)
+        }}
+        onMarkCaseCompleted={async (caseId: string) => {
+          'use server'
+          return markCaseCompleted(caseId)
         }}
       />
     </div>
