@@ -7,6 +7,7 @@ import { StatusBadge, RiskBadge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { ClientTabs } from './client-tabs'
 import { getDocumentChecklistStatus } from './documents/actions'
+import { getExchangeConnections } from './exchanges/actions'
 
 // TODO: Get actual org from session
 const TEMP_ORG_ID = 'temp-org-id'
@@ -48,9 +49,10 @@ async function getClient(id: string) {
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const { id } = await params
-  const [client, checklistStatus] = await Promise.all([
+  const [client, checklistStatus, exchangeConnectionsResult] = await Promise.all([
     getClient(id),
     getDocumentChecklistStatus(id),
+    getExchangeConnections(id),
   ])
 
   if (!client) {
@@ -128,7 +130,11 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       </div>
 
       {/* Tabs */}
-      <ClientTabs client={client} documentChecklist={checklistStatus} />
+      <ClientTabs
+        client={client}
+        documentChecklist={checklistStatus}
+        exchangeConnections={exchangeConnectionsResult.connections}
+      />
     </div>
   )
 }

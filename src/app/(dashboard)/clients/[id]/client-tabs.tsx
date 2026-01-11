@@ -20,9 +20,17 @@ import { Modal, ModalContent, ModalFooter } from '@/components/ui/modal'
 import { DocumentUpload } from '@/components/uploads/document-upload'
 import { DocumentChecklist } from '@/components/documents/document-checklist'
 import { AddWalletForm } from '@/components/wallets/add-wallet-form'
+import { ExchangeConnections } from '@/components/exchanges/exchange-connections'
 import { format } from 'date-fns'
 import type { Client, Wallet, Document, Transaction, Case, Blockchain, DocumentType, DocumentStatus, TransactionType, TransactionSource, CaseStatus, RiskLevel } from '@prisma/client'
 import { deleteWallet, verifyWallet, getWalletProofDocuments } from './wallets/actions'
+import {
+  addExchangeConnection,
+  removeExchangeConnection,
+  syncExchangeConnection,
+  testExchangeCredentials,
+} from './exchanges/actions'
+import type { ExchangeTypeValue } from '@/lib/validators/exchange'
 
 interface DocumentWithVerifier extends Document {
   verifiedBy?: { id: string; name: string; email: string } | null
@@ -42,6 +50,17 @@ interface DocumentChecklistData {
   pendingDocuments: DocumentType[]
 }
 
+interface ExchangeConnectionData {
+  id: string
+  exchange: ExchangeTypeValue
+  label: string | null
+  maskedApiKey: string
+  isActive: boolean
+  lastSyncAt: Date | null
+  lastSyncStatus: string | null
+  createdAt: Date
+}
+
 interface ClientTabsProps {
   client: Client & {
     wallets: Wallet[]
@@ -50,6 +69,7 @@ interface ClientTabsProps {
     cases: Case[]
   }
   documentChecklist: DocumentChecklistData
+  exchangeConnections: ExchangeConnectionData[]
 }
 
 const STATUS_FILTER_OPTIONS = [
@@ -59,7 +79,7 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'REJECTED', label: 'Rejected' },
 ]
 
-export function ClientTabs({ client, documentChecklist }: ClientTabsProps) {
+export function ClientTabs({ client, documentChecklist, exchangeConnections }: ClientTabsProps) {
   const router = useRouter()
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [previewDocument, setPreviewDocument] = useState<DocumentWithVerifier | null>(null)
@@ -190,6 +210,7 @@ export function ClientTabs({ client, documentChecklist }: ClientTabsProps) {
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="wallets">Wallets ({client.wallets.length})</TabsTrigger>
+        <TabsTrigger value="exchanges">Exchanges ({exchangeConnections.length})</TabsTrigger>
         <TabsTrigger value="documents">Documents ({client.documents.length})</TabsTrigger>
         <TabsTrigger value="transactions">Transactions</TabsTrigger>
         <TabsTrigger value="cases">Cases ({client.cases.length})</TabsTrigger>
@@ -320,6 +341,28 @@ export function ClientTabs({ client, documentChecklist }: ClientTabsProps) {
             </Card>
           )}
         </div>
+      </TabsContent>
+
+      <TabsContent value="exchanges">
+        <ExchangeConnections
+          clientId={client.id}
+          connections={exchangeConnections}
+          onAddConnection={async (data) => {
+            return addExchangeConnection({
+              clientId: client.id,
+              ...data,
+            })
+          }}
+          onRemoveConnection={async (connectionId) => {
+            return removeExchangeConnection({ connectionId })
+          }}
+          onSyncConnection={async (connectionId) => {
+            return syncExchangeConnection({ connectionId })
+          }}
+          onTestCredentials={async (data) => {
+            return testExchangeCredentials(data)
+          }}
+        />
       </TabsContent>
 
       <TabsContent value="documents">

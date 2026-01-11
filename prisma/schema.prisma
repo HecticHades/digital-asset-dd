@@ -132,17 +132,18 @@ model Organization {
   updatedAt DateTime @updatedAt
 
   // Relations
-  users          User[]
-  clients        Client[]
-  cases          Case[]
-  documents      Document[]
-  wallets        Wallet[]
-  transactions   Transaction[]
-  findings       Finding[]
-  checklistItems ChecklistItem[]
-  reports        Report[]
-  auditLogs      AuditLog[]
-  invitations    UserInvitation[]
+  users               User[]
+  clients             Client[]
+  cases               Case[]
+  documents           Document[]
+  wallets             Wallet[]
+  transactions        Transaction[]
+  findings            Finding[]
+  checklistItems      ChecklistItem[]
+  reports             Report[]
+  auditLogs           AuditLog[]
+  invitations         UserInvitation[]
+  exchangeConnections ExchangeConnection[]
 
   @@map("organizations")
 }
@@ -164,17 +165,18 @@ model User {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   // Relations
-  assignedCases        Case[]          @relation("AssignedAnalyst")
-  reviewedCases        Case[]          @relation("ReviewedBy")
-  verifiedDocuments    Document[]      @relation("VerifiedBy")
-  resolvedFindings     Finding[]       @relation("ResolvedBy")
-  completedChecklists  ChecklistItem[] @relation("CompletedBy")
-  generatedReports     Report[]
-  auditLogs            AuditLog[]
-  createdClients       Client[]        @relation("CreatedBy")
-  createdCases         Case[]          @relation("CreatedBy")
-  passwordResetTokens  PasswordResetToken[]
-  sentInvitations      UserInvitation[] @relation("InvitedBy")
+  assignedCases            Case[]               @relation("AssignedAnalyst")
+  reviewedCases            Case[]               @relation("ReviewedBy")
+  verifiedDocuments        Document[]           @relation("VerifiedBy")
+  resolvedFindings         Finding[]            @relation("ResolvedBy")
+  completedChecklists      ChecklistItem[]      @relation("CompletedBy")
+  generatedReports         Report[]
+  auditLogs                AuditLog[]
+  createdClients           Client[]             @relation("CreatedBy")
+  createdCases             Case[]               @relation("CreatedBy")
+  passwordResetTokens      PasswordResetToken[]
+  sentInvitations          UserInvitation[]     @relation("InvitedBy")
+  createdExchangeConnections ExchangeConnection[] @relation("CreatedExchangeConnection")
 
   @@index([organizationId])
   @@index([email])
@@ -202,10 +204,11 @@ model Client {
   createdBy   User?   @relation("CreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   // Relations
-  cases        Case[]
-  wallets      Wallet[]
-  documents    Document[]
-  transactions Transaction[]
+  cases               Case[]
+  wallets             Wallet[]
+  documents           Document[]
+  transactions        Transaction[]
+  exchangeConnections ExchangeConnection[]
 
   @@index([organizationId])
   @@index([email])
@@ -521,4 +524,40 @@ model UserInvitation {
   @@index([email])
   @@index([organizationId])
   @@map("user_invitations")
+}
+
+enum ExchangeType {
+  BINANCE
+  COINBASE
+  KRAKEN
+}
+
+model ExchangeConnection {
+  id                 String       @id @default(cuid())
+  exchange           ExchangeType
+  label              String?
+  encryptedApiKey    String
+  encryptedSecretKey String
+  isActive           Boolean      @default(true)
+  lastSyncAt         DateTime?
+  lastSyncStatus     String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  // Tenant isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Client relation (API connection per client)
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Created by
+  createdById String?
+  createdBy   User?   @relation("CreatedExchangeConnection", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([clientId, exchange])
+  @@index([organizationId])
+  @@index([clientId])
+  @@map("exchange_connections")
 }
