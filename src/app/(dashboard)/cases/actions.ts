@@ -1,13 +1,35 @@
 'use server'
 
 import { prisma } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
 import { createCaseSchema, updateCaseSchema, type CreateCaseInput, type UpdateCaseInput } from '@/lib/validators/case'
 import { caseApprovalSchema, type CaseApprovalInput } from '@/lib/validators/approval'
 import { revalidatePath } from 'next/cache'
 
-// TODO: Get actual user/org from session
+// TODO: Get actual user/org from session - for now use temp values
 const TEMP_ORG_ID = 'temp-org-id'
 const TEMP_USER_ID = 'temp-user-id'
+
+/**
+ * Helper to get current user or temp user for development
+ */
+async function getAuthenticatedUser() {
+  const user = await getCurrentUser()
+  if (user) {
+    return {
+      id: user.id,
+      role: user.role,
+      organizationId: user.organizationId,
+    }
+  }
+  // Fallback for development
+  return {
+    id: TEMP_USER_ID,
+    role: 'ANALYST' as string,
+    organizationId: TEMP_ORG_ID,
+  }
+}
 
 export async function createCase(data: CreateCaseInput) {
   const validated = createCaseSchema.safeParse(data)
@@ -296,6 +318,15 @@ export async function submitCaseForReview(caseId: string) {
 
 // Process case approval decision (compliance officer action)
 export async function processCaseApproval(data: CaseApprovalInput) {
+  // Check permission - only ADMIN and COMPLIANCE_OFFICER can approve/reject cases
+  const user = await getAuthenticatedUser()
+  if (!hasPermission(user.role, 'cases:review')) {
+    return {
+      success: false,
+      error: 'You do not have permission to approve or reject cases',
+    }
+  }
+
   const validated = caseApprovalSchema.safeParse(data)
 
   if (!validated.success) {
@@ -312,7 +343,7 @@ export async function processCaseApproval(data: CaseApprovalInput) {
     const caseData = await prisma.case.findFirst({
       where: {
         id: caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -333,7 +364,7 @@ export async function processCaseApproval(data: CaseApprovalInput) {
       where: { id: caseId },
       data: {
         status: newStatus,
-        reviewedById: TEMP_USER_ID,
+        reviewedById: user.id,
         reviewedAt: new Date(),
         reviewNotes: comment,
       },

@@ -158,3 +158,32 @@ export async function verifyPassword(
 ): Promise<boolean> {
   return bcrypt.compare(password, hashedPassword)
 }
+
+/**
+ * Require a specific role for access
+ * Throws an error if user doesn't have the required role
+ */
+export async function requireRole(allowedRoles: string | string[]) {
+  const user = await getCurrentUser()
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles]
+  if (!roles.includes(user.role)) {
+    throw new Error('Forbidden: Insufficient permissions')
+  }
+
+  return user
+}
+
+/**
+ * Check if current user has a specific role
+ */
+export async function checkRole(allowedRoles: string | string[]): Promise<boolean> {
+  const user = await getCurrentUser()
+  if (!user) return false
+
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles]
+  return roles.includes(user.role)
+}

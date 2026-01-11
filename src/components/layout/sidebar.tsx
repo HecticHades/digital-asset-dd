@@ -2,9 +2,20 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 
-const navigation = [
+// Role-based navigation items
+// Each item can have an optional 'roles' array - if present, only those roles can see it
+// If 'roles' is undefined, all authenticated users can see the item
+interface NavItem {
+  name: string
+  href: string
+  icon: React.ReactNode
+  roles?: string[]  // If undefined, all roles can access
+}
+
+const navigation: NavItem[] = [
   {
     name: 'Dashboard',
     href: '/dashboard',
@@ -40,6 +51,7 @@ const navigation = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
+    roles: ['ADMIN', 'COMPLIANCE_OFFICER'],  // Only compliance officers and admins
   },
   {
     name: 'Reports',
@@ -69,6 +81,16 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const userRole = session?.user?.role as string | undefined
+
+  // Filter navigation items based on user role
+  const visibleNavigation = navigation.filter(item => {
+    // If no roles specified, item is visible to all
+    if (!item.roles) return true
+    // If roles specified, check if user has one of them
+    return userRole && item.roles.includes(userRole)
+  })
 
   return (
     <>
@@ -109,7 +131,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-3">
-            {navigation.map((item) => {
+            {visibleNavigation.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
               return (
                 <li key={item.name}>

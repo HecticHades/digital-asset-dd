@@ -14,12 +14,21 @@ export function Header({ onMenuClick }: HeaderProps) {
 
   const userName = session?.user?.name || 'User'
   const userEmail = session?.user?.email || ''
+  const userRole = session?.user?.role || ''
   const userInitials = userName
     .split(' ')
     .map((n) => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2)
+
+  // Format role for display
+  const formatRole = (role: string) => {
+    return role
+      .split('_')
+      .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+      .join(' ')
+  }
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -100,6 +109,9 @@ export function Header({ onMenuClick }: HeaderProps) {
               <div className="px-4 py-2 border-b border-slate-200">
                 <p className="text-sm font-medium text-slate-900">{userName}</p>
                 <p className="text-xs text-slate-500">{userEmail}</p>
+                {userRole && (
+                  <p className="text-xs text-primary-600 mt-1">{formatRole(userRole)}</p>
+                )}
               </div>
               <a
                 href="/settings/profile"

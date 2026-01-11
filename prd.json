@@ -328,7 +328,7 @@
       "id": "US-032",
       "title": "Role-based access control",
       "priority": 25,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Roles: Admin, Manager, Analyst, Compliance Officer, Auditor",
         "Create middleware to check permissions",
