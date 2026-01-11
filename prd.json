@@ -166,7 +166,7 @@
       "id": "US-013",
       "title": "Document upload and categorization",
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "Create src/components/uploads/document-upload.tsx",
         "Upload PDF, images (jpg, png)",
