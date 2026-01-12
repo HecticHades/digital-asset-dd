@@ -10,6 +10,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { createCase, getClients, getAnalysts } from '../actions'
 import { createCaseSchema } from '@/lib/validators/case'
 
+export const dynamic = 'force-dynamic'
+
 export default function NewCasePage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)

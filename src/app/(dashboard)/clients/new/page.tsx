@@ -9,6 +9,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { createClient } from '../actions'
 import { createClientSchema } from '@/lib/validators/client'
 
+export const dynamic = 'force-dynamic'
+
 export default function NewClientPage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)

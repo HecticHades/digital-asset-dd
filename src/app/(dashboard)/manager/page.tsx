@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { getAnalystsWorkload, getTeamProgress, getCasesForAssignment, getOverdueCases, getAvailableAnalysts } from './actions'
 import { ManagerDashboard } from './manager-dashboard'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Manager Dashboard | DADD',
   description: 'Team workload and case management',

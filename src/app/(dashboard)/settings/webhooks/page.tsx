@@ -12,6 +12,8 @@ import {
 } from './actions'
 import type { CreateWebhookClientInput, UpdateWebhookClientInput } from '@/lib/validators/webhook'
 
+export const dynamic = 'force-dynamic'
+
 async function getAuthenticatedUser() {
   const user = await getCurrentUser()
   if (user) return user

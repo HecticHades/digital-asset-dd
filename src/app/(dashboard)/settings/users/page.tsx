@@ -15,6 +15,8 @@ import {
   unlockUser,
 } from './actions'
 
+export const dynamic = 'force-dynamic'
+
 async function getAuthenticatedUser() {
   const user = await getCurrentUser()
   if (user) return user

@@ -10,6 +10,8 @@ import {
 } from './actions'
 import type { CreateApiKeyClientInput, UpdateApiKeyClientInput } from '@/lib/validators/api-key'
 
+export const dynamic = 'force-dynamic'
+
 async function getAuthenticatedUser() {
   const user = await getCurrentUser()
   if (user) return user
