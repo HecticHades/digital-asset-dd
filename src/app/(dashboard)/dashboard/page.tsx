@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge, RiskBadge } from '@/components/ui/badge'
@@ -8,9 +10,6 @@ import { CaseStatus, FindingSeverity } from '@prisma/client'
 import { CasesByStatusChart } from './cases-by-status-chart'
 
 export const dynamic = 'force-dynamic'
-
-// TODO: Get actual org from session
-const TEMP_ORG_ID = 'temp-org-id'
 
 interface DashboardStats {
   totalClients: number
@@ -33,27 +32,27 @@ interface CasesByStatus {
   count: number
 }
 
-async function getDashboardStats(): Promise<DashboardStats> {
+async function getDashboardStats(organizationId: string): Promise<DashboardStats> {
   try {
     const [totalClients, activeCases, pendingReviews, highRiskFlags] = await Promise.all([
       prisma.client.count({
-        where: { organizationId: TEMP_ORG_ID },
+        where: { organizationId },
       }),
       prisma.case.count({
         where: {
-          organizationId: TEMP_ORG_ID,
+          organizationId,
           status: { in: ['DRAFT', 'IN_PROGRESS'] },
         },
       }),
       prisma.case.count({
         where: {
-          organizationId: TEMP_ORG_ID,
+          organizationId,
           status: 'PENDING_REVIEW',
         },
       }),
       prisma.finding.count({
         where: {
-          organizationId: TEMP_ORG_ID,
+          organizationId,
           severity: { in: ['HIGH', 'CRITICAL'] },
           isResolved: false,
         },
@@ -66,22 +65,22 @@ async function getDashboardStats(): Promise<DashboardStats> {
   }
 }
 
-async function getRecentActivity(): Promise<RecentActivity[]> {
+async function getRecentActivity(organizationId: string): Promise<RecentActivity[]> {
   try {
     const [recentCases, recentClients, recentFindings] = await Promise.all([
       prisma.case.findMany({
-        where: { organizationId: TEMP_ORG_ID },
+        where: { organizationId },
         orderBy: { createdAt: 'desc' },
         take: 5,
         include: { client: { select: { name: true } } },
       }),
       prisma.client.findMany({
-        where: { organizationId: TEMP_ORG_ID },
+        where: { organizationId },
         orderBy: { createdAt: 'desc' },
         take: 5,
       }),
       prisma.finding.findMany({
-        where: { organizationId: TEMP_ORG_ID },
+        where: { organizationId },
         orderBy: { createdAt: 'desc' },
         take: 5,
         include: { case: { select: { id: true, title: true } } },
@@ -121,11 +120,11 @@ async function getRecentActivity(): Promise<RecentActivity[]> {
   }
 }
 
-async function getCasesByStatus(): Promise<CasesByStatus[]> {
+async function getCasesByStatus(organizationId: string): Promise<CasesByStatus[]> {
   try {
     const cases = await prisma.case.groupBy({
       by: ['status'],
-      where: { organizationId: TEMP_ORG_ID },
+      where: { organizationId },
       _count: { status: true },
     })
 
@@ -215,11 +214,15 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ error?: string }>
 }) {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+  const organizationId = user.organizationId
+
   const resolvedParams = await searchParams
   const [stats, recentActivity, casesByStatus] = await Promise.all([
-    getDashboardStats(),
-    getRecentActivity(),
-    getCasesByStatus(),
+    getDashboardStats(organizationId),
+    getRecentActivity(organizationId),
+    getCasesByStatus(organizationId),
   ])
 
   return (

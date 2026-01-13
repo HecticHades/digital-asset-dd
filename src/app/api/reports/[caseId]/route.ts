@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { collectReportData } from '@/lib/reports/collector'
 import { ReportDocument } from '@/lib/reports/pdf-document'
 import { mkdir, writeFile, readFile } from 'fs/promises'
@@ -16,10 +17,6 @@ import path from 'path'
 import React from 'react'
 
 export const dynamic = 'force-dynamic'
-
-// TODO: Get actual org and user from session
-const TEMP_ORG_ID = 'temp-org-id'
-const TEMP_USER_ID = 'temp-user-id'
 
 interface RouteParams {
   params: Promise<{ caseId: string }>
@@ -31,13 +28,14 @@ interface RouteParams {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    const user = await requireAuth()
     const { caseId } = await params
 
     // Verify case exists and belongs to org
     const caseData = await prisma.case.findFirst({
       where: {
         id: caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       select: {
         id: true,
@@ -62,8 +60,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Collect all report data
     const reportData = await collectReportData({
       caseId,
-      organizationId: TEMP_ORG_ID,
-      userId: TEMP_USER_ID,
+      organizationId: user.organizationId,
+      userId: user.id,
       includeAppendices: true,
     })
 
@@ -116,9 +114,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         path: relativePath,
         size: pdfBuffer.length,
         isLocked: caseData.status === 'COMPLETED' || caseData.status === 'APPROVED',
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
         caseId,
-        generatedById: TEMP_USER_ID,
+        generatedById: user.id,
       },
     })
 
@@ -135,6 +133,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Error generating report:', error)
     return NextResponse.json(
       { error: 'Failed to generate report', details: error instanceof Error ? error.message : 'Unknown error' },
@@ -149,13 +150,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const user = await requireAuth()
     const { caseId } = await params
 
     // Verify case exists and belongs to org
     const caseData = await prisma.case.findFirst({
       where: {
         id: caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       select: { id: true },
     })
@@ -171,7 +173,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const reports = await prisma.report.findMany({
       where: {
         caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       include: {
         generatedBy: {
@@ -198,6 +200,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       })),
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Error fetching reports:', error)
     return NextResponse.json(
       { error: 'Failed to fetch reports' },

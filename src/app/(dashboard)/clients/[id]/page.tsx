@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge, RiskBadge } from '@/components/ui/badge'
@@ -12,19 +13,16 @@ import { getDocumentRequests } from './document-requests/actions'
 
 export const dynamic = 'force-dynamic'
 
-// TODO: Get actual org from session
-const TEMP_ORG_ID = 'temp-org-id'
-
 interface ClientDetailPageProps {
   params: Promise<{ id: string }>
 }
 
-async function getClient(id: string) {
+async function getClient(id: string, organizationId: string) {
   try {
     return await prisma.client.findFirst({
       where: {
         id,
-        organizationId: TEMP_ORG_ID,
+        organizationId,
       },
       include: {
         wallets: true,
@@ -54,9 +52,13 @@ async function getClient(id: string) {
 }
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+  const organizationId = user.organizationId
+
   const { id } = await params
   const [client, checklistStatus, exchangeConnectionsResult, documentRequests] = await Promise.all([
-    getClient(id),
+    getClient(id, organizationId),
     getDocumentChecklistStatus(id),
     getExchangeConnections(id),
     getDocumentRequests(id),

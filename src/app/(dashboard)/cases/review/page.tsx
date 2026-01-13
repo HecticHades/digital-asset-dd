@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge, RiskBadge } from '@/components/ui/badge'
 import { format } from 'date-fns'
@@ -8,14 +10,11 @@ import { processCaseApproval } from '../actions'
 
 export const dynamic = 'force-dynamic'
 
-// TODO: Get actual org from session
-const TEMP_ORG_ID = 'temp-org-id'
-
-async function getPendingCases() {
+async function getPendingCases(organizationId: string) {
   try {
     return await prisma.case.findMany({
       where: {
-        organizationId: TEMP_ORG_ID,
+        organizationId,
         status: 'PENDING_REVIEW',
       },
       include: {
@@ -62,18 +61,18 @@ async function getPendingCases() {
   }
 }
 
-async function getReviewStats() {
+async function getReviewStats(organizationId: string) {
   try {
     const [pendingCount, approvedToday, rejectedToday] = await Promise.all([
       prisma.case.count({
         where: {
-          organizationId: TEMP_ORG_ID,
+          organizationId,
           status: 'PENDING_REVIEW',
         },
       }),
       prisma.case.count({
         where: {
-          organizationId: TEMP_ORG_ID,
+          organizationId,
           status: 'APPROVED',
           reviewedAt: {
             gte: new Date(new Date().setHours(0, 0, 0, 0)),
@@ -82,7 +81,7 @@ async function getReviewStats() {
       }),
       prisma.case.count({
         where: {
-          organizationId: TEMP_ORG_ID,
+          organizationId,
           status: 'REJECTED',
           reviewedAt: {
             gte: new Date(new Date().setHours(0, 0, 0, 0)),
@@ -98,9 +97,13 @@ async function getReviewStats() {
 }
 
 export default async function CaseReviewPage() {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+  const organizationId = user.organizationId
+
   const [pendingCases, stats] = await Promise.all([
-    getPendingCases(),
-    getReviewStats(),
+    getPendingCases(organizationId),
+    getReviewStats(organizationId),
   ])
 
   // Sort by risk level priority and due date

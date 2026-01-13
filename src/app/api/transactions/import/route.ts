@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { z } from 'zod'
 import type { ParsedTransactionType } from '@/types/transaction'
 import { TransactionType, TransactionSource, Prisma } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
-
-// TODO: Get actual user/org from session
-const TEMP_ORG_ID = 'temp-org-id'
 
 const transactionSchema = z.object({
   timestamp: z.string().or(z.date()),
@@ -57,6 +55,7 @@ function mapTransactionSource(source: string): TransactionSource {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await requireAuth()
     const body = await request.json()
 
     const validated = importSchema.safeParse(body)
@@ -73,7 +72,7 @@ export async function POST(request: NextRequest) {
     const client = await prisma.client.findFirst({
       where: {
         id: clientId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -97,7 +96,7 @@ export async function POST(request: NextRequest) {
       source: mapTransactionSource(tx.source),
       rawData: tx.rawData ? (tx.rawData as Prisma.InputJsonValue) : Prisma.JsonNull,
       clientId: clientId,
-      organizationId: TEMP_ORG_ID,
+      organizationId: user.organizationId,
     }))
 
     // Batch insert transactions
@@ -111,6 +110,9 @@ export async function POST(request: NextRequest) {
       message: `Successfully imported ${result.count} transactions`,
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Failed to import transactions:', error)
     return NextResponse.json(
       { error: 'Failed to import transactions' },

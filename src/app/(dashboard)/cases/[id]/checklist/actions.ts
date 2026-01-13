@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import {
   createChecklistItemSchema,
@@ -13,20 +14,18 @@ import {
   type ChecklistCompletionStatus,
 } from '@/lib/validators/checklist'
 
-// TODO: Get actual user/org from session
-const TEMP_ORG_ID = 'temp-org-id'
-const TEMP_USER_ID = 'temp-user-id'
-
 /**
  * Initialize default checklist items for a case
  */
 export async function initializeChecklist(caseId: string) {
+  const user = await requireAuth()
+
   try {
     // Check if case exists and belongs to org
     const caseData = await prisma.case.findFirst({
       where: {
         id: caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -38,7 +37,7 @@ export async function initializeChecklist(caseId: string) {
     const existingItems = await prisma.checklistItem.count({
       where: {
         caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -51,7 +50,7 @@ export async function initializeChecklist(caseId: string) {
       data: DEFAULT_CHECKLIST_ITEMS.map((item) => ({
         ...item,
         caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       })),
     })
 
@@ -68,6 +67,8 @@ export async function initializeChecklist(caseId: string) {
  * Create a custom checklist item
  */
 export async function createChecklistItem(data: CreateChecklistItemInput) {
+  const user = await requireAuth()
+
   const validated = createChecklistItemSchema.safeParse(data)
 
   if (!validated.success) {
@@ -82,7 +83,7 @@ export async function createChecklistItem(data: CreateChecklistItemInput) {
     const caseData = await prisma.case.findFirst({
       where: {
         id: validated.data.caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -97,7 +98,7 @@ export async function createChecklistItem(data: CreateChecklistItemInput) {
         isRequired: validated.data.isRequired,
         order: validated.data.order,
         caseId: validated.data.caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -114,6 +115,8 @@ export async function createChecklistItem(data: CreateChecklistItemInput) {
  * Update a checklist item
  */
 export async function updateChecklistItem(itemId: string, data: UpdateChecklistItemInput) {
+  const user = await requireAuth()
+
   const validated = updateChecklistItemSchema.safeParse(data)
 
   if (!validated.success) {
@@ -127,7 +130,7 @@ export async function updateChecklistItem(itemId: string, data: UpdateChecklistI
     const item = await prisma.checklistItem.findFirst({
       where: {
         id: itemId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -159,6 +162,8 @@ export async function updateChecklistItem(itemId: string, data: UpdateChecklistI
  * Mark a checklist item as complete
  */
 export async function completeChecklistItem(itemId: string, data?: CompleteChecklistItemInput) {
+  const user = await requireAuth()
+
   let notes: string | undefined
 
   if (data) {
@@ -176,7 +181,7 @@ export async function completeChecklistItem(itemId: string, data?: CompleteCheck
     const item = await prisma.checklistItem.findFirst({
       where: {
         id: itemId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -193,7 +198,7 @@ export async function completeChecklistItem(itemId: string, data?: CompleteCheck
       data: {
         isCompleted: true,
         completedAt: new Date(),
-        completedById: TEMP_USER_ID,
+        completedById: user.id,
         notes: notes || item.notes,
       },
     })
@@ -211,11 +216,13 @@ export async function completeChecklistItem(itemId: string, data?: CompleteCheck
  * Mark a checklist item as incomplete
  */
 export async function uncompleteChecklistItem(itemId: string) {
+  const user = await requireAuth()
+
   try {
     const item = await prisma.checklistItem.findFirst({
       where: {
         id: itemId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -249,11 +256,13 @@ export async function uncompleteChecklistItem(itemId: string) {
  * Delete a checklist item (only non-required custom items)
  */
 export async function deleteChecklistItem(itemId: string) {
+  const user = await requireAuth()
+
   try {
     const item = await prisma.checklistItem.findFirst({
       where: {
         id: itemId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -278,11 +287,13 @@ export async function deleteChecklistItem(itemId: string) {
  * Get checklist items for a case
  */
 export async function getChecklistItems(caseId: string) {
+  const user = await requireAuth()
+
   try {
     const items = await prisma.checklistItem.findMany({
       where: {
         caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       include: {
         completedBy: {
@@ -308,11 +319,13 @@ export async function getChecklistItems(caseId: string) {
  * Get checklist completion status for a case
  */
 export async function getChecklistCompletionStatus(caseId: string): Promise<{ success: boolean; data?: ChecklistCompletionStatus; error?: string }> {
+  const user = await requireAuth()
+
   try {
     const items = await prisma.checklistItem.findMany({
       where: {
         caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       select: {
         title: true,

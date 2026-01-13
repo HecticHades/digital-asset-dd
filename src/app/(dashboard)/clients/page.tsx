@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { StatusBadge, RiskBadge } from '@/components/ui/badge'
 import {
@@ -14,14 +16,11 @@ import { format } from 'date-fns'
 
 export const dynamic = 'force-dynamic'
 
-// TODO: Get actual org from session
-const TEMP_ORG_ID = 'temp-org-id'
-
-async function getClients() {
+async function getClients(organizationId: string) {
   try {
     return await prisma.client.findMany({
       where: {
-        organizationId: TEMP_ORG_ID,
+        organizationId,
       },
       orderBy: {
         createdAt: 'desc',
@@ -34,7 +33,11 @@ async function getClients() {
 }
 
 export default async function ClientsPage() {
-  const clients = await getClients()
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+  const organizationId = user.organizationId
+
+  const clients = await getClients(organizationId)
 
   return (
     <div>

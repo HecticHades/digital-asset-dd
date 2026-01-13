@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { DocumentType, DocumentStatus } from '@prisma/client'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
@@ -7,9 +8,6 @@ import { randomUUID } from 'crypto'
 import { dispatchDocumentUploaded } from '@/lib/webhooks'
 
 export const dynamic = 'force-dynamic'
-
-// TODO: Get actual user/org from session
-const TEMP_ORG_ID = 'temp-org-id'
 
 // Allowed MIME types
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
@@ -20,6 +18,7 @@ const UPLOAD_DIR = join(process.cwd(), 'uploads', 'documents')
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await requireAuth()
     const formData = await request.formData()
 
     const file = formData.get('file') as File | null
@@ -68,7 +67,7 @@ export async function POST(request: NextRequest) {
     const client = await prisma.client.findFirst({
       where: {
         id: clientId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -104,13 +103,13 @@ export async function POST(request: NextRequest) {
         category: category,
         status: DocumentStatus.PENDING,
         clientId: clientId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
     // Dispatch webhook for document upload (fire and forget)
     dispatchDocumentUploaded({
-      organizationId: TEMP_ORG_ID,
+      organizationId: user.organizationId,
       documentId: document.id,
       documentName: document.originalName,
       category: document.category,
@@ -132,6 +131,9 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Failed to upload document:', error)
     return NextResponse.json(
       { error: 'Failed to upload document' },

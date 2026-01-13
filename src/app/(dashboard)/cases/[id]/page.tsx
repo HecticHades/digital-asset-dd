@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge, RiskBadge } from '@/components/ui/badge'
@@ -24,19 +25,16 @@ import type { CaseStatus } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 
-// TODO: Get actual org from session
-const TEMP_ORG_ID = 'temp-org-id'
-
 interface CaseDetailPageProps {
   params: Promise<{ id: string }>
 }
 
-async function getCase(id: string) {
+async function getCase(id: string, organizationId: string) {
   try {
     return await prisma.case.findFirst({
       where: {
         id,
-        organizationId: TEMP_ORG_ID,
+        organizationId,
       },
       include: {
         client: true,
@@ -125,8 +123,12 @@ async function getCase(id: string) {
 }
 
 export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+  const organizationId = user.organizationId
+
   const { id } = await params
-  const caseData = await getCase(id)
+  const caseData = await getCase(id, organizationId)
 
   if (!caseData) {
     notFound()

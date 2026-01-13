@@ -1,13 +1,11 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
 import { TransactionList } from './transaction-list'
 import type { Prisma, TransactionType, TransactionSource } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
-
-// TEMP: Using a hardcoded org ID until auth is implemented
-const TEMP_ORG_ID = 'temp-org-id'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -24,6 +22,10 @@ interface PageProps {
 }
 
 export default async function ClientTransactionsPage({ params, searchParams }: PageProps) {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+  const organizationId = user.organizationId
+
   const { id } = await params
   const search = await searchParams
 
@@ -31,7 +33,7 @@ export default async function ClientTransactionsPage({ params, searchParams }: P
   const client = await prisma.client.findFirst({
     where: {
       id,
-      organizationId: TEMP_ORG_ID,
+      organizationId,
     },
     select: {
       id: true,
@@ -46,7 +48,7 @@ export default async function ClientTransactionsPage({ params, searchParams }: P
   // Build filter conditions
   const where: Prisma.TransactionWhereInput = {
     clientId: id,
-    organizationId: TEMP_ORG_ID,
+    organizationId: organizationId,
   }
 
   if (search.type) {
@@ -114,7 +116,7 @@ export default async function ClientTransactionsPage({ params, searchParams }: P
   const uniqueAssets = await prisma.transaction.findMany({
     where: {
       clientId: id,
-      organizationId: TEMP_ORG_ID,
+      organizationId: organizationId,
     },
     select: { asset: true },
     distinct: ['asset'],

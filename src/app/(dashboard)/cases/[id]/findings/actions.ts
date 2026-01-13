@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import {
   createFindingSchema,
   updateFindingSchema,
@@ -12,11 +13,9 @@ import {
 import { revalidatePath } from 'next/cache'
 import { dispatchRiskFlagCreated } from '@/lib/webhooks'
 
-// TODO: Get actual user/org from session
-const TEMP_ORG_ID = 'temp-org-id'
-const TEMP_USER_ID = 'temp-user-id'
-
 export async function createFinding(data: CreateFindingInput) {
+  const user = await requireAuth()
+
   const validated = createFindingSchema.safeParse(data)
 
   if (!validated.success) {
@@ -31,7 +30,7 @@ export async function createFinding(data: CreateFindingInput) {
     const caseData = await prisma.case.findFirst({
       where: {
         id: validated.data.caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       include: {
         client: {
@@ -59,7 +58,7 @@ export async function createFinding(data: CreateFindingInput) {
         caseId: validated.data.caseId,
         walletId: validated.data.walletId || null,
         transactionId: validated.data.transactionId || null,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -67,7 +66,7 @@ export async function createFinding(data: CreateFindingInput) {
 
     // Dispatch webhook for new risk flag (fire and forget)
     dispatchRiskFlagCreated({
-      organizationId: TEMP_ORG_ID,
+      organizationId: user.organizationId,
       caseId: caseData.id,
       caseTitle: caseData.title,
       findingId: finding.id,
@@ -93,6 +92,8 @@ export async function createFinding(data: CreateFindingInput) {
 }
 
 export async function updateFinding(id: string, data: UpdateFindingInput) {
+  const user = await requireAuth()
+
   const validated = updateFindingSchema.safeParse(data)
 
   if (!validated.success) {
@@ -106,7 +107,7 @@ export async function updateFinding(id: string, data: UpdateFindingInput) {
     const finding = await prisma.finding.findFirst({
       where: {
         id,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -144,6 +145,8 @@ export async function updateFinding(id: string, data: UpdateFindingInput) {
 }
 
 export async function resolveFinding(id: string, data: ResolveFindingInput) {
+  const user = await requireAuth()
+
   const validated = resolveFindingSchema.safeParse(data)
 
   if (!validated.success) {
@@ -157,7 +160,7 @@ export async function resolveFinding(id: string, data: ResolveFindingInput) {
     const finding = await prisma.finding.findFirst({
       where: {
         id,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -180,7 +183,7 @@ export async function resolveFinding(id: string, data: ResolveFindingInput) {
       data: {
         isResolved: true,
         resolution: validated.data.resolution,
-        resolvedById: TEMP_USER_ID,
+        resolvedById: user.id,
         resolvedAt: new Date(),
       },
     })
@@ -201,11 +204,13 @@ export async function resolveFinding(id: string, data: ResolveFindingInput) {
 }
 
 export async function reopenFinding(id: string) {
+  const user = await requireAuth()
+
   try {
     const finding = await prisma.finding.findFirst({
       where: {
         id,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -249,11 +254,13 @@ export async function reopenFinding(id: string) {
 }
 
 export async function deleteFinding(id: string) {
+  const user = await requireAuth()
+
   try {
     const finding = await prisma.finding.findFirst({
       where: {
         id,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -283,11 +290,13 @@ export async function deleteFinding(id: string) {
 }
 
 export async function getFindings(caseId: string) {
+  const user = await requireAuth()
+
   try {
     const findings = await prisma.finding.findMany({
       where: {
         caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       include: {
         wallet: {

@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { StatusBadge, RiskBadge } from '@/components/ui/badge'
 import {
@@ -15,9 +17,6 @@ import { CaseFilters } from './case-filters'
 
 export const dynamic = 'force-dynamic'
 
-// TODO: Get actual org from session
-const TEMP_ORG_ID = 'temp-org-id'
-
 interface CasesPageProps {
   searchParams: Promise<{
     status?: string
@@ -26,14 +25,14 @@ interface CasesPageProps {
   }>
 }
 
-async function getCases(filters: {
+async function getCases(organizationId: string, filters: {
   status?: string
   riskLevel?: string
   assignedToId?: string
 }) {
   try {
     const where: Record<string, unknown> = {
-      organizationId: TEMP_ORG_ID,
+      organizationId,
     }
 
     if (filters.status) {
@@ -72,11 +71,11 @@ async function getCases(filters: {
   }
 }
 
-async function getAnalysts() {
+async function getAnalysts(organizationId: string) {
   try {
     return await prisma.user.findMany({
       where: {
-        organizationId: TEMP_ORG_ID,
+        organizationId,
         role: {
           in: ['ANALYST', 'MANAGER'],
         },
@@ -96,10 +95,14 @@ async function getAnalysts() {
 }
 
 export default async function CasesPage({ searchParams }: CasesPageProps) {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+  const organizationId = user.organizationId
+
   const params = await searchParams
   const [cases, analysts] = await Promise.all([
-    getCases(params),
-    getAnalysts(),
+    getCases(organizationId, params),
+    getAnalysts(organizationId),
   ])
 
   return (

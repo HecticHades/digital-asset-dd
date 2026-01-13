@@ -1,13 +1,13 @@
 'use server'
 
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { createClientSchema, type CreateClientInput } from '@/lib/validators/client'
 import { revalidatePath } from 'next/cache'
 
-// TODO: Get actual user/org from session
-const TEMP_ORG_ID = 'temp-org-id'
-
 export async function createClient(data: CreateClientInput) {
+  const user = await requireAuth()
+
   const validated = createClientSchema.safeParse(data)
 
   if (!validated.success) {
@@ -25,7 +25,7 @@ export async function createClient(data: CreateClientInput) {
         phone: validated.data.phone || null,
         address: validated.data.address || null,
         notes: validated.data.notes || null,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -45,10 +45,12 @@ export async function createClient(data: CreateClientInput) {
 }
 
 export async function getClients() {
+  const user = await requireAuth()
+
   try {
     const clients = await prisma.client.findMany({
       where: {
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       orderBy: {
         createdAt: 'desc',

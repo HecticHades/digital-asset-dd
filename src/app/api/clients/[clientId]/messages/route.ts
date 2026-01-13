@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
-
-// Temp org ID for development
-const TEMP_ORG_ID = 'temp-org-id'
 
 // GET - Fetch messages for a client (staff view)
 export async function GET(
@@ -13,6 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
+    const user = await requireAuth()
     const { clientId } = await params
     const token = await getToken({
       req: request,
@@ -27,8 +26,7 @@ export async function GET(
       )
     }
 
-    // Use token org or fallback to temp
-    const organizationId = (token?.organizationId as string) || TEMP_ORG_ID
+    const organizationId = user.organizationId
 
     // Verify client exists and belongs to the organization
     const client = await prisma.client.findFirst({
@@ -84,6 +82,9 @@ export async function GET(
 
     return NextResponse.json({ messages: serializedMessages })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Failed to fetch messages:', error)
     return NextResponse.json(
       { error: 'Failed to fetch messages' },
@@ -98,6 +99,7 @@ export async function POST(
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
+    const user = await requireAuth()
     const { clientId } = await params
     const token = await getToken({
       req: request,
@@ -113,8 +115,8 @@ export async function POST(
     }
 
     // Get user ID and org ID
-    const userId = token?.id as string | undefined
-    const organizationId = (token?.organizationId as string) || TEMP_ORG_ID
+    const userId = user.id
+    const organizationId = user.organizationId
 
     // Verify client exists and belongs to the organization
     const client = await prisma.client.findFirst({
@@ -171,7 +173,7 @@ export async function POST(
       data: {
         content: content.trim(),
         clientId,
-        staffUserId: userId || null,
+        staffUserId: userId,
       },
       include: {
         staffUser: {
@@ -191,6 +193,9 @@ export async function POST(
       },
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Failed to send message:', error)
     return NextResponse.json(
       { error: 'Failed to send message' },

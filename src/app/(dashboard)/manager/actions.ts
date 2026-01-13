@@ -1,34 +1,10 @@
 'use server'
 
 import { prisma } from '@/lib/db'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
 import { revalidatePath } from 'next/cache'
 import { CaseStatus, RiskLevel } from '@prisma/client'
-
-// TODO: Get actual user/org from session - for now use temp values
-const TEMP_ORG_ID = 'temp-org-id'
-const TEMP_USER_ID = 'temp-user-id'
-
-/**
- * Helper to get current user or temp user for development
- */
-async function getAuthenticatedUser() {
-  const user = await getCurrentUser()
-  if (user) {
-    return {
-      id: user.id,
-      role: user.role,
-      organizationId: user.organizationId,
-    }
-  }
-  // Fallback for development
-  return {
-    id: TEMP_USER_ID,
-    role: 'MANAGER' as string,
-    organizationId: TEMP_ORG_ID,
-  }
-}
 
 export interface AnalystWorkload {
   id: string
@@ -74,7 +50,7 @@ export interface CaseForAssignment {
  * Get all analysts with their workload
  */
 export async function getAnalystsWorkload(): Promise<{ success: boolean; data: AnalystWorkload[]; error?: string }> {
-  const user = await getAuthenticatedUser()
+  const user = await requireAuth()
 
   if (!hasPermission(user.role, 'workload:view')) {
     return { success: false, data: [], error: 'You do not have permission to view workload' }
@@ -183,7 +159,7 @@ export async function getAnalystsWorkload(): Promise<{ success: boolean; data: A
  * Get team progress overview
  */
 export async function getTeamProgress(): Promise<{ success: boolean; data: TeamProgress | null; error?: string }> {
-  const user = await getAuthenticatedUser()
+  const user = await requireAuth()
 
   if (!hasPermission(user.role, 'workload:view')) {
     return { success: false, data: null, error: 'You do not have permission to view team progress' }
@@ -272,7 +248,7 @@ export async function getTeamProgress(): Promise<{ success: boolean; data: TeamP
  * Get cases for assignment/reassignment
  */
 export async function getCasesForAssignment(): Promise<{ success: boolean; data: CaseForAssignment[]; error?: string }> {
-  const user = await getAuthenticatedUser()
+  const user = await requireAuth()
 
   if (!hasPermission(user.role, 'cases:assign')) {
     return { success: false, data: [], error: 'You do not have permission to assign cases' }
@@ -322,7 +298,7 @@ export async function getCasesForAssignment(): Promise<{ success: boolean; data:
  * Get overdue cases
  */
 export async function getOverdueCases(): Promise<{ success: boolean; data: CaseForAssignment[]; error?: string }> {
-  const user = await getAuthenticatedUser()
+  const user = await requireAuth()
 
   if (!hasPermission(user.role, 'workload:view')) {
     return { success: false, data: [], error: 'You do not have permission to view overdue cases' }
@@ -372,7 +348,7 @@ export async function assignCase(
   caseId: string,
   analystId: string | null
 ): Promise<{ success: boolean; error?: string }> {
-  const user = await getAuthenticatedUser()
+  const user = await requireAuth()
 
   if (!hasPermission(user.role, 'cases:assign')) {
     return { success: false, error: 'You do not have permission to assign cases' }
@@ -435,7 +411,7 @@ export async function bulkAssignCases(
   caseIds: string[],
   analystId: string
 ): Promise<{ success: boolean; assignedCount: number; error?: string }> {
-  const user = await getAuthenticatedUser()
+  const user = await requireAuth()
 
   if (!hasPermission(user.role, 'cases:assign')) {
     return { success: false, assignedCount: 0, error: 'You do not have permission to assign cases' }
@@ -481,7 +457,7 @@ export async function bulkAssignCases(
  * Get available analysts for assignment
  */
 export async function getAvailableAnalysts(): Promise<{ success: boolean; data: { id: string; name: string; activeCases: number }[]; error?: string }> {
-  const user = await getAuthenticatedUser()
+  const user = await requireAuth()
 
   if (!hasPermission(user.role, 'cases:assign')) {
     return { success: false, data: [], error: 'You do not have permission to view analysts' }

@@ -1,29 +1,29 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { getSession } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import { StaffMessagesView } from './staff-messages-view'
 
 export const dynamic = 'force-dynamic'
-
-// Temp org ID for development
-const TEMP_ORG_ID = 'temp-org-id'
 
 export default async function ClientMessagesPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+  const organizationId = user.organizationId
+
   const { id: clientId } = await params
-  const session = await getSession()
 
   // Get user info for the current user
-  const userId = session?.user?.id
+  const userId = user.id
 
   // Get client with portal user
   const client = await prisma.client.findFirst({
     where: {
       id: clientId,
-      organizationId: TEMP_ORG_ID,
+      organizationId,
     },
     include: {
       portalUser: {

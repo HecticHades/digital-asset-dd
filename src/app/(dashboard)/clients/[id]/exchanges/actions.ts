@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import {
   addExchangeConnectionSchema,
   updateExchangeConnectionSchema,
@@ -19,10 +20,6 @@ import {
   type ExchangeType,
 } from '@/lib/exchanges'
 import { TransactionType, TransactionSource, Prisma } from '@prisma/client'
-
-// TODO: Get from auth context
-const TEMP_ORG_ID = 'temp-org-id'
-const TEMP_USER_ID = 'temp-user-id'
 
 /**
  * Convert Prisma exchange type to our exchange type
@@ -46,10 +43,12 @@ export async function getExchangeConnections(clientId: string): Promise<{
     createdAt: Date
   }>
 }> {
+  const user = await requireAuth()
+
   const connections = await prisma.exchangeConnection.findMany({
     where: {
       clientId,
-      organizationId: TEMP_ORG_ID,
+      organizationId: user.organizationId,
     },
     orderBy: { createdAt: 'desc' },
   })
@@ -78,6 +77,8 @@ export async function addExchangeConnection(input: {
   secretKey: string
   label?: string
 }): Promise<{ success: boolean; error?: string; connectionId?: string }> {
+  const user = await requireAuth()
+
   const parsed = addExchangeConnectionSchema.safeParse(input)
   if (!parsed.success) {
     return { success: false, error: parsed.error.errors[0].message }
@@ -87,7 +88,7 @@ export async function addExchangeConnection(input: {
 
   // Verify client exists and belongs to org
   const client = await prisma.client.findFirst({
-    where: { id: clientId, organizationId: TEMP_ORG_ID },
+    where: { id: clientId, organizationId: user.organizationId },
   })
 
   if (!client) {
@@ -126,9 +127,9 @@ export async function addExchangeConnection(input: {
       label,
       encryptedApiKey: encrypted.encryptedApiKey,
       encryptedSecretKey: encrypted.encryptedSecretKey,
-      organizationId: TEMP_ORG_ID,
+      organizationId: user.organizationId,
       clientId,
-      createdById: TEMP_USER_ID,
+      createdById: user.id,
     },
   })
 
@@ -145,6 +146,8 @@ export async function updateExchangeConnection(input: {
   label?: string
   isActive?: boolean
 }): Promise<{ success: boolean; error?: string }> {
+  const user = await requireAuth()
+
   const parsed = updateExchangeConnectionSchema.safeParse(input)
   if (!parsed.success) {
     return { success: false, error: parsed.error.errors[0].message }
@@ -154,7 +157,7 @@ export async function updateExchangeConnection(input: {
 
   // Verify connection exists and belongs to org
   const connection = await prisma.exchangeConnection.findFirst({
-    where: { id: connectionId, organizationId: TEMP_ORG_ID },
+    where: { id: connectionId, organizationId: user.organizationId },
   })
 
   if (!connection) {
@@ -181,6 +184,8 @@ export async function updateExchangeConnection(input: {
 export async function removeExchangeConnection(input: {
   connectionId: string
 }): Promise<{ success: boolean; error?: string }> {
+  const user = await requireAuth()
+
   const parsed = removeExchangeConnectionSchema.safeParse(input)
   if (!parsed.success) {
     return { success: false, error: parsed.error.errors[0].message }
@@ -190,7 +195,7 @@ export async function removeExchangeConnection(input: {
 
   // Verify connection exists and belongs to org
   const connection = await prisma.exchangeConnection.findFirst({
-    where: { id: connectionId, organizationId: TEMP_ORG_ID },
+    where: { id: connectionId, organizationId: user.organizationId },
   })
 
   if (!connection) {
@@ -218,6 +223,8 @@ export async function syncExchangeConnection(input: {
   transactionsImported?: number
   balances?: Array<{ asset: string; total: number }>
 }> {
+  const user = await requireAuth()
+
   const parsed = syncExchangeConnectionSchema.safeParse(input)
   if (!parsed.success) {
     return { success: false, error: parsed.error.errors[0].message }
@@ -227,7 +234,7 @@ export async function syncExchangeConnection(input: {
 
   // Get connection with client info
   const connection = await prisma.exchangeConnection.findFirst({
-    where: { id: connectionId, organizationId: TEMP_ORG_ID },
+    where: { id: connectionId, organizationId: user.organizationId },
     include: { client: true },
   })
 
@@ -294,7 +301,7 @@ export async function syncExchangeConnection(input: {
           exchange: connection.exchange,
           source: 'API_SYNC' as TransactionSource,
           rawData: tx.rawData ? (tx.rawData as Prisma.InputJsonValue) : Prisma.JsonNull,
-          organizationId: TEMP_ORG_ID,
+          organizationId: user.organizationId,
           clientId: connection.clientId,
         })),
       })

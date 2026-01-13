@@ -6,14 +6,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 
 export const dynamic = 'force-dynamic'
-
-// TODO: Get actual org from session
-const TEMP_ORG_ID = 'temp-org-id'
 
 interface RouteParams {
   params: Promise<{ caseId: string; reportId: string }>
@@ -25,6 +23,7 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const user = await requireAuth()
     const { caseId, reportId } = await params
 
     // Verify report exists and belongs to the case/org
@@ -32,7 +31,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       where: {
         id: reportId,
         caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -67,6 +66,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Error downloading report:', error)
     return NextResponse.json(
       { error: 'Failed to download report' },

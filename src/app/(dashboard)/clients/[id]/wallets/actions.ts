@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import {
   createWalletSchema,
   verifyWalletSchema,
@@ -11,10 +12,9 @@ import {
   type DeleteWalletInput,
 } from '@/lib/validators/wallet'
 
-// TODO: Get actual org from session
-const TEMP_ORG_ID = 'temp-org-id'
-
 export async function createWallet(input: CreateWalletInput) {
+  const user = await requireAuth()
+
   const result = createWalletSchema.safeParse(input)
 
   if (!result.success) {
@@ -31,7 +31,7 @@ export async function createWallet(input: CreateWalletInput) {
     const client = await prisma.client.findFirst({
       where: {
         id: clientId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -65,7 +65,7 @@ export async function createWallet(input: CreateWalletInput) {
         address: address.toLowerCase(),
         blockchain,
         label: label || null,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
         clientId,
       },
     })
@@ -86,6 +86,8 @@ export async function createWallet(input: CreateWalletInput) {
 }
 
 export async function verifyWallet(input: VerifyWalletInput) {
+  const user = await requireAuth()
+
   const result = verifyWalletSchema.safeParse(input)
 
   if (!result.success) {
@@ -102,7 +104,7 @@ export async function verifyWallet(input: VerifyWalletInput) {
     const wallet = await prisma.wallet.findFirst({
       where: {
         id: walletId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -118,7 +120,7 @@ export async function verifyWallet(input: VerifyWalletInput) {
       where: {
         id: proofDocumentId,
         clientId: wallet.clientId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -154,6 +156,8 @@ export async function verifyWallet(input: VerifyWalletInput) {
 }
 
 export async function deleteWallet(input: DeleteWalletInput) {
+  const user = await requireAuth()
+
   const result = deleteWalletSchema.safeParse(input)
 
   if (!result.success) {
@@ -170,7 +174,7 @@ export async function deleteWallet(input: DeleteWalletInput) {
     const wallet = await prisma.wallet.findFirst({
       where: {
         id: walletId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -201,11 +205,13 @@ export async function deleteWallet(input: DeleteWalletInput) {
 }
 
 export async function getWalletProofDocuments(clientId: string) {
+  const user = await requireAuth()
+
   try {
     const documents = await prisma.document.findMany({
       where: {
         clientId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
         status: 'VERIFIED',
       },
       select: {

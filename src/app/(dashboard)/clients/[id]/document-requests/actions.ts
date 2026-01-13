@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import {
   createDocumentRequestSchema,
@@ -14,34 +15,16 @@ import { sendDocumentRequestEmail } from '@/lib/email/document-request'
 import { notifyDocumentUploaded } from '@/lib/notifications'
 import { DocumentRequestStatus } from '@prisma/client'
 
-// TODO: Replace with actual user from session once fully integrated
-const TEMP_ORG_ID = 'temp-org-id'
-const TEMP_USER_ID = 'temp-user-id'
-
-/**
- * Get authenticated user info (with dev fallback)
- */
-async function getAuthenticatedUser() {
-  // In a real implementation, this would use getServerSession
-  // For now, we return a dev fallback
-  return {
-    id: TEMP_USER_ID,
-    organizationId: TEMP_ORG_ID,
-    name: 'Dev User',
-    email: 'dev@example.com',
-  }
-}
-
 /**
  * Create a new document request
  */
 export async function createDocumentRequest(input: CreateDocumentRequestInput) {
+  const user = await requireAuth()
+
   const validation = createDocumentRequestSchema.safeParse(input)
   if (!validation.success) {
     return { success: false, error: 'Invalid input', details: validation.error.flatten() }
   }
-
-  const user = await getAuthenticatedUser()
   const { clientId, title, description, category, priority, dueDate, sendEmail } = validation.data
 
   try {
@@ -121,7 +104,7 @@ export async function createDocumentRequest(input: CreateDocumentRequestInput) {
  * Get document requests for a client
  */
 export async function getDocumentRequests(clientId: string) {
-  const user = await getAuthenticatedUser()
+  const user = await requireAuth()
 
   return prisma.documentRequest.findMany({
     where: {
@@ -153,7 +136,7 @@ export async function getDocumentRequests(clientId: string) {
  * Get a single document request by ID
  */
 export async function getDocumentRequest(requestId: string) {
-  const user = await getAuthenticatedUser()
+  const user = await requireAuth()
 
   return prisma.documentRequest.findFirst({
     where: {
@@ -176,12 +159,12 @@ export async function getDocumentRequest(requestId: string) {
  * Update a document request
  */
 export async function updateDocumentRequest(input: UpdateDocumentRequestInput) {
+  const user = await requireAuth()
+
   const validation = updateDocumentRequestSchema.safeParse(input)
   if (!validation.success) {
     return { success: false, error: 'Invalid input', details: validation.error.flatten() }
   }
-
-  const user = await getAuthenticatedUser()
   const { requestId, ...updates } = validation.data
 
   try {
@@ -218,12 +201,12 @@ export async function updateDocumentRequest(input: UpdateDocumentRequestInput) {
  * Cancel a document request
  */
 export async function cancelDocumentRequest(input: { requestId: string; notes?: string }) {
+  const user = await requireAuth()
+
   const validation = cancelDocumentRequestSchema.safeParse(input)
   if (!validation.success) {
     return { success: false, error: 'Invalid input' }
   }
-
-  const user = await getAuthenticatedUser()
   const { requestId, notes } = validation.data
 
   try {
@@ -263,12 +246,12 @@ export async function cancelDocumentRequest(input: { requestId: string; notes?: 
  * Process a submitted document (verify or reject)
  */
 export async function processDocumentRequest(input: { requestId: string; action: 'VERIFIED' | 'REJECTED'; notes?: string }) {
+  const user = await requireAuth()
+
   const validation = processDocumentRequestSchema.safeParse(input)
   if (!validation.success) {
     return { success: false, error: 'Invalid input' }
   }
-
-  const user = await getAuthenticatedUser()
   const { requestId, action, notes } = validation.data
 
   try {
@@ -428,7 +411,7 @@ export async function getClientPendingRequests(clientId: string) {
  * Resend email notification for a document request
  */
 export async function resendDocumentRequestEmail(requestId: string) {
-  const user = await getAuthenticatedUser()
+  const user = await requireAuth()
 
   try {
     const request = await prisma.documentRequest.findFirst({

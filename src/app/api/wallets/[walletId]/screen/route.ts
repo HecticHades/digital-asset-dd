@@ -12,13 +12,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { screenAddress, screenTransaction } from '@/lib/screening/sanctions'
 import type { Blockchain, FindingSeverity, FindingCategory } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
-
-// Temporary organization ID until auth is implemented
-const TEMP_ORG_ID = 'temp-org-id'
 
 interface ScreeningResponse {
   success: boolean
@@ -50,11 +48,12 @@ export async function POST(
   { params }: { params: Promise<{ walletId: string }> }
 ): Promise<NextResponse<ScreeningResponse | { error: string }>> {
   try {
+    const user = await requireAuth()
     const { walletId } = await params
 
-    // Fetch wallet with transactions and associated case
-    const wallet = await prisma.wallet.findUnique({
-      where: { id: walletId },
+    // Fetch wallet with transactions and associated case (verify org ownership)
+    const wallet = await prisma.wallet.findFirst({
+      where: { id: walletId, organizationId: user.organizationId },
       include: {
         client: {
           include: {
@@ -158,7 +157,7 @@ export async function POST(
           severity: flag.severity,
           category: flag.category,
           isResolved: false,
-          organizationId: TEMP_ORG_ID,
+          organizationId: user.organizationId,
           caseId: activeCase.id,
           walletId: wallet.id,
           transactionId: flag.transactionId,
@@ -213,6 +212,9 @@ export async function POST(
 
     return NextResponse.json(response)
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Screening error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Screening failed' },

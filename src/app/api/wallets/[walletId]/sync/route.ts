@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { fetchWalletTransactions, isSupportedBlockchain } from '@/lib/blockchain'
 import type { TransactionType, TransactionSource, Blockchain } from '@prisma/client'
 import type { ParsedTransaction, ParsedTransactionType } from '@/types/transaction'
 import { Prisma } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
-
-// Temporary org ID until auth is implemented
-const TEMP_ORG_ID = 'temp-org-id'
 
 // Map parsed transaction type to Prisma enum
 function mapTransactionType(type: ParsedTransactionType): TransactionType {
@@ -33,11 +31,12 @@ export async function POST(
   { params }: { params: Promise<{ walletId: string }> }
 ) {
   try {
+    const user = await requireAuth()
     const { walletId } = await params
 
-    // Fetch wallet with client info
-    const wallet = await prisma.wallet.findUnique({
-      where: { id: walletId },
+    // Fetch wallet with client info (verify org ownership)
+    const wallet = await prisma.wallet.findFirst({
+      where: { id: walletId, organizationId: user.organizationId },
       include: { client: true },
     })
 
@@ -134,6 +133,9 @@ export async function POST(
       total: transactions.length,
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Error syncing wallet transactions:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to sync transactions' },

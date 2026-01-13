@@ -7,24 +7,23 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
-
-// Temporary org ID for development
-const TEMP_ORG_ID = 'temp-org-id'
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ walletId: string }> }
 ) {
   try {
+    const user = await requireAuth()
     const { walletId } = await params
 
     // Verify wallet exists and belongs to organization
     const wallet = await prisma.wallet.findFirst({
       where: {
         id: walletId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -39,7 +38,7 @@ export async function GET(
     const transactions = await prisma.transaction.findMany({
       where: {
         walletId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       orderBy: {
         timestamp: 'desc',
@@ -72,6 +71,9 @@ export async function GET(
       transactions: formattedTransactions,
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Error fetching wallet transactions:', error)
     return NextResponse.json(
       { error: 'Failed to fetch transactions' },

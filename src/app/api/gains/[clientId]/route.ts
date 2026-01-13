@@ -6,6 +6,7 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import {
   calculateGainsLosses,
   exportTaxReport,
@@ -15,14 +16,12 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-// Temporary org ID for development
-const TEMP_ORG_ID = 'temp-org-id'
-
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
+    const user = await requireAuth()
     const { clientId } = await params
     const { searchParams } = new URL(request.url)
 
@@ -48,7 +47,7 @@ export async function GET(
     const client = await prisma.client.findFirst({
       where: {
         id: clientId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -63,7 +62,7 @@ export async function GET(
     const transactions = await prisma.transaction.findMany({
       where: {
         clientId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       orderBy: {
         timestamp: 'asc',
@@ -125,6 +124,9 @@ export async function GET(
       },
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Error calculating gains/losses:', error)
     return NextResponse.json(
       { error: 'Failed to calculate gains/losses' },

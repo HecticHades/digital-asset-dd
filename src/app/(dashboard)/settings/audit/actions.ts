@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAuth } from '@/lib/auth'
 import {
   getAuditLogs,
   getAuditLogUsers,
@@ -9,9 +10,6 @@ import {
   type AuditAction,
   type EntityType,
 } from '@/lib/audit'
-
-// Temporary org ID for development
-const TEMP_ORG_ID = 'temp-org-id'
 
 /**
  * Fetch audit logs with filtering and pagination
@@ -26,6 +24,8 @@ export async function fetchAuditLogs(
   } = {},
   pagination: AuditLogPagination = { page: 1, limit: 50 }
 ) {
+  const user = await requireAuth()
+
   // Build filter object
   const auditFilter: AuditLogFilter = {}
 
@@ -51,7 +51,7 @@ export async function fetchAuditLogs(
     auditFilter.endDate.setHours(23, 59, 59, 999)
   }
 
-  const result = await getAuditLogs(TEMP_ORG_ID, auditFilter, pagination)
+  const result = await getAuditLogs(user.organizationId, auditFilter, pagination)
 
   // Serialize dates for client component
   return {
@@ -67,7 +67,8 @@ export async function fetchAuditLogs(
  * Get users for filter dropdown
  */
 export async function fetchAuditLogUsers() {
-  return getAuditLogUsers(TEMP_ORG_ID)
+  const user = await requireAuth()
+  return getAuditLogUsers(user.organizationId)
 }
 
 /**
@@ -82,6 +83,8 @@ export async function exportAuditLogs(
     endDate?: string
   } = {}
 ) {
+  const user = await requireAuth()
+
   // Build filter object
   const auditFilter: AuditLogFilter = {}
 
@@ -107,7 +110,7 @@ export async function exportAuditLogs(
   }
 
   // Fetch all logs (up to 10000 for export)
-  const result = await getAuditLogs(TEMP_ORG_ID, auditFilter, { page: 1, limit: 10000 })
+  const result = await getAuditLogs(user.organizationId, auditFilter, { page: 1, limit: 10000 })
 
   // Convert back to Date objects for CSV export
   const logsWithDates = result.logs.map(log => ({

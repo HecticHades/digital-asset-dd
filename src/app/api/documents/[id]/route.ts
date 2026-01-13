@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 
 export const dynamic = 'force-dynamic'
-
-// TODO: Get actual user/org from session
-const TEMP_ORG_ID = 'temp-org-id'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -15,6 +13,7 @@ interface RouteParams {
 // GET /api/documents/[id] - Get document metadata or serve file
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const user = await requireAuth()
     const { id } = await params
     const { searchParams } = new URL(request.url)
     const download = searchParams.get('download') === 'true'
@@ -24,7 +23,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const document = await prisma.document.findFirst({
       where: {
         id,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       include: {
         client: {
@@ -99,6 +98,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Failed to get document:', error)
     return NextResponse.json(
       { error: 'Failed to get document' },

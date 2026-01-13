@@ -1,38 +1,16 @@
 'use server'
 
 import { prisma } from '@/lib/db'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
 import { createCaseSchema, updateCaseSchema, type CreateCaseInput, type UpdateCaseInput } from '@/lib/validators/case'
 import { caseApprovalSchema, type CaseApprovalInput } from '@/lib/validators/approval'
 import { revalidatePath } from 'next/cache'
 import { dispatchCaseCreated, dispatchCaseStatusChanged } from '@/lib/webhooks'
 
-// TODO: Get actual user/org from session - for now use temp values
-const TEMP_ORG_ID = 'temp-org-id'
-const TEMP_USER_ID = 'temp-user-id'
-
-/**
- * Helper to get current user or temp user for development
- */
-async function getAuthenticatedUser() {
-  const user = await getCurrentUser()
-  if (user) {
-    return {
-      id: user.id,
-      role: user.role,
-      organizationId: user.organizationId,
-    }
-  }
-  // Fallback for development
-  return {
-    id: TEMP_USER_ID,
-    role: 'ANALYST' as string,
-    organizationId: TEMP_ORG_ID,
-  }
-}
-
 export async function createCase(data: CreateCaseInput) {
+  const user = await requireAuth()
+
   const validated = createCaseSchema.safeParse(data)
 
   if (!validated.success) {
@@ -50,7 +28,7 @@ export async function createCase(data: CreateCaseInput) {
         clientId: validated.data.clientId,
         assignedToId: validated.data.assignedToId || null,
         dueDate: validated.data.dueDate ? new Date(validated.data.dueDate) : null,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       include: {
         client: {
@@ -66,7 +44,7 @@ export async function createCase(data: CreateCaseInput) {
 
     // Dispatch webhook for case creation (fire and forget)
     dispatchCaseCreated({
-      organizationId: TEMP_ORG_ID,
+      organizationId: user.organizationId,
       caseId: caseData.id,
       caseTitle: caseData.title,
       clientId: caseData.clientId,
@@ -89,6 +67,8 @@ export async function createCase(data: CreateCaseInput) {
 }
 
 export async function updateCase(id: string, data: UpdateCaseInput) {
+  const user = await requireAuth()
+
   const validated = updateCaseSchema.safeParse(data)
 
   if (!validated.success) {
@@ -120,7 +100,7 @@ export async function updateCase(id: string, data: UpdateCaseInput) {
     const caseData = await prisma.case.update({
       where: {
         id,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       data: updateData,
       include: {
@@ -139,7 +119,7 @@ export async function updateCase(id: string, data: UpdateCaseInput) {
     // Dispatch webhook if status changed (fire and forget)
     if (validated.data.status !== undefined && previousStatus !== validated.data.status) {
       dispatchCaseStatusChanged({
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
         caseId: caseData.id,
         caseTitle: caseData.title,
         clientId: caseData.clientId,
@@ -167,9 +147,11 @@ export async function getCases(filters?: {
   riskLevel?: string
   assignedToId?: string
 }) {
+  const user = await requireAuth()
+
   try {
     const where: Record<string, unknown> = {
-      organizationId: TEMP_ORG_ID,
+      organizationId: user.organizationId,
     }
 
     if (filters?.status) {
@@ -211,11 +193,13 @@ export async function getCases(filters?: {
 }
 
 export async function getCase(id: string) {
+  const user = await requireAuth()
+
   try {
     const caseData = await prisma.case.findFirst({
       where: {
         id,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       include: {
         client: true,
@@ -265,10 +249,12 @@ export async function getCase(id: string) {
 }
 
 export async function getClients() {
+  const user = await requireAuth()
+
   try {
     const clients = await prisma.client.findMany({
       where: {
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       select: {
         id: true,
@@ -287,10 +273,12 @@ export async function getClients() {
 }
 
 export async function getAnalysts() {
+  const user = await requireAuth()
+
   try {
     const analysts = await prisma.user.findMany({
       where: {
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
         role: {
           in: ['ANALYST', 'MANAGER'],
         },
@@ -314,12 +302,14 @@ export async function getAnalysts() {
 
 // Submit case for review (analyst action)
 export async function submitCaseForReview(caseId: string) {
+  const user = await requireAuth()
+
   try {
     // Get the case and verify it exists
     const caseData = await prisma.case.findFirst({
       where: {
         id: caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
       include: {
         checklistItems: true,
@@ -366,8 +356,9 @@ export async function submitCaseForReview(caseId: string) {
 
 // Process case approval decision (compliance officer action)
 export async function processCaseApproval(data: CaseApprovalInput) {
+  const user = await requireAuth()
+
   // Check permission - only ADMIN and COMPLIANCE_OFFICER can approve/reject cases
-  const user = await getAuthenticatedUser()
   if (!hasPermission(user.role, 'cases:review')) {
     return {
       success: false,
@@ -430,10 +421,12 @@ export async function processCaseApproval(data: CaseApprovalInput) {
 
 // Get pending review cases (for compliance officer view)
 export async function getPendingReviewCases() {
+  const user = await requireAuth()
+
   try {
     const cases = await prisma.case.findMany({
       where: {
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
         status: 'PENDING_REVIEW',
       },
       include: {
@@ -480,11 +473,13 @@ export async function getPendingReviewCases() {
 
 // Reopen a rejected case (return to analyst for revision)
 export async function reopenRejectedCase(caseId: string) {
+  const user = await requireAuth()
+
   try {
     const caseData = await prisma.case.findFirst({
       where: {
         id: caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
@@ -516,11 +511,13 @@ export async function reopenRejectedCase(caseId: string) {
 
 // Mark an approved case as completed
 export async function markCaseCompleted(caseId: string) {
+  const user = await requireAuth()
+
   try {
     const caseData = await prisma.case.findFirst({
       where: {
         id: caseId,
-        organizationId: TEMP_ORG_ID,
+        organizationId: user.organizationId,
       },
     })
 
