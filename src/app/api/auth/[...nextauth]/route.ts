@@ -1,10 +1,13 @@
+import { NextRequest } from 'next/server'
 import NextAuth from 'next-auth'
-import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-const handler = NextAuth(authOptions)
+async function auth(req: NextRequest) {
+  const { authOptions } = await import('@/lib/auth')
+  return NextAuth(authOptions)(req as any)
+}
 
-export const GET = handler
-export const POST = handler
+export const GET = auth
+export const POST = auth

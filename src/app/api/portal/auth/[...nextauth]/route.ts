@@ -1,10 +1,13 @@
+import { NextRequest } from 'next/server'
 import NextAuth from 'next-auth'
-import { portalAuthOptions } from '@/lib/portal-auth'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-const handler = NextAuth(portalAuthOptions)
+async function auth(req: NextRequest) {
+  const { portalAuthOptions } = await import('@/lib/portal-auth')
+  return NextAuth(portalAuthOptions)(req as any)
+}
 
-export const GET = handler
-export const POST = handler
+export const GET = auth
+export const POST = auth
