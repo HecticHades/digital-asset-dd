@@ -3,6 +3,8 @@ import { NotificationPreferencesForm } from './notification-preferences-form'
 import { EmailPreferencesForm } from './email-preferences-form'
 import { NotificationHistory } from './notification-history'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Notification Settings | Digital Asset DD',
   description: 'Manage your notification preferences',
