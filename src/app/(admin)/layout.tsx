@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { isSuperAdmin } from '@/lib/organization'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminLayout({
   children,
 }: {

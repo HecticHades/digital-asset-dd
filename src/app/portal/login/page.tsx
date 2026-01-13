@@ -1,6 +1,8 @@
 import { Suspense } from 'react'
 import { PortalLoginForm } from './portal-login-form'
 
+export const dynamic = 'force-dynamic'
+
 export default function PortalLoginPage() {
   return (
     <Suspense fallback={<LoginSkeleton />}>
