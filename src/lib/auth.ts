@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { NextAuthOptions, getServerSession } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
@@ -130,15 +131,17 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 }
 
-export async function getSession() {
+// Cached session getter - deduplicates across a single request
+export const getSession = cache(async () => {
   return getServerSession(authOptions)
-}
+})
 
-export async function getCurrentUser() {
+// Cached user getter - deduplicates across a single request
+export const getCurrentUser = cache(async () => {
   const session = await getSession()
   if (!session?.user) return null
   return session.user
-}
+})
 
 export async function requireAuth() {
   const user = await getCurrentUser()

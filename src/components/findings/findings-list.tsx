@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -134,28 +134,38 @@ export function FindingsList({
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null)
   const [expandedFinding, setExpandedFinding] = useState<string | null>(null)
 
-  // Separate open and resolved findings
-  const openFindings = findings.filter((f) => !f.isResolved)
-  const resolvedFindings = findings.filter((f) => f.isResolved)
+  // Memoize filtered findings to prevent recalculation on every render
+  const openFindings = useMemo(
+    () => findings.filter((f) => !f.isResolved),
+    [findings]
+  )
 
-  // Group open findings by severity
-  const groupedFindings = SEVERITY_ORDER.reduce((acc, severity) => {
-    const group = openFindings.filter((f) => f.severity === severity)
-    if (group.length > 0) {
-      acc[severity] = group
-    }
-    return acc
-  }, {} as Record<FindingSeverity, Finding[]>)
+  const resolvedFindings = useMemo(
+    () => findings.filter((f) => f.isResolved),
+    [findings]
+  )
 
-  // Summary counts
-  const summaryCounts = {
+  // Group open findings by severity - memoized
+  const groupedFindings = useMemo(() => {
+    return SEVERITY_ORDER.reduce((acc, severity) => {
+      const group = openFindings.filter((f) => f.severity === severity)
+      if (group.length > 0) {
+        acc[severity] = group
+      }
+      return acc
+    }, {} as Record<FindingSeverity, Finding[]>)
+  }, [openFindings])
+
+  // Summary counts - memoized
+  const summaryCounts = useMemo(() => ({
     critical: openFindings.filter((f) => f.severity === 'CRITICAL').length,
     high: openFindings.filter((f) => f.severity === 'HIGH').length,
     medium: openFindings.filter((f) => f.severity === 'MEDIUM').length,
     lowInfo: openFindings.filter((f) => f.severity === 'LOW' || f.severity === 'INFO').length,
-  }
+  }), [openFindings])
 
-  const handleAddFinding = async (data: {
+  // Stable event handlers with useCallback
+  const handleAddFinding = useCallback(async (data: {
     title: string
     description?: string
     severity: FindingSeverity
@@ -167,19 +177,19 @@ export function FindingsList({
       setShowAddModal(false)
     }
     return result
-  }
+  }, [onCreateFinding])
 
-  const handleResolve = async (id: string, resolution: string) => {
+  const handleResolve = useCallback(async (id: string, resolution: string) => {
     const result = await onResolveFinding(id, resolution)
     if (result.success) {
       setSelectedFinding(null)
     }
     return result
-  }
+  }, [onResolveFinding])
 
-  const handleReopen = async (id: string) => {
+  const handleReopen = useCallback(async (id: string) => {
     await onReopenFinding(id)
-  }
+  }, [onReopenFinding])
 
   const renderFindingCard = (finding: Finding) => {
     const isExpanded = expandedFinding === finding.id

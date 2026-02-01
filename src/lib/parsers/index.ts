@@ -1,17 +1,18 @@
-import Papa from 'papaparse'
 import type { ParseResult, ExchangeType } from '@/types/transaction'
 import { isBinanceFile, parseBinance } from './binance'
 import { isCoinbaseFile, parseCoinbase } from './coinbase'
 import { isKrakenFile, parseKraken } from './kraken'
 
-export { parseBinance } from './binance'
-export { parseCoinbase } from './coinbase'
-export { parseKraken } from './kraken'
+// Note: Import parsers directly from their files instead of re-exporting
+// e.g., import { parseBinance } from '@/lib/parsers/binance'
 
 /**
  * Extracts headers from CSV content
+ * Dynamically imports papaparse to reduce bundle size
  */
-export function extractHeaders(csvContent: string): string[] {
+export async function extractHeaders(csvContent: string): Promise<string[]> {
+  const Papa = (await import('papaparse')).default
+
   const parsed = Papa.parse(csvContent, {
     preview: 1,
     skipEmptyLines: true
@@ -26,6 +27,7 @@ export function extractHeaders(csvContent: string): string[] {
 
 /**
  * Detects the exchange from CSV headers
+ * @deprecated Use extractHeaders() first, then call detectExchange()
  */
 export function detectExchange(headers: string[]): ExchangeType {
   const normalizedHeaders = headers.map(h => h.toLowerCase().trim())
@@ -48,8 +50,8 @@ export function detectExchange(headers: string[]): ExchangeType {
 /**
  * Auto-detects the exchange and parses the CSV content
  */
-export function parseCSV(csvContent: string): ParseResult {
-  const headers = extractHeaders(csvContent)
+export async function parseCSV(csvContent: string): Promise<ParseResult> {
+  const headers = await extractHeaders(csvContent)
 
   if (headers.length === 0) {
     return {
@@ -93,7 +95,7 @@ export async function parseFile(file: File): Promise<ParseResult> {
   return new Promise((resolve) => {
     const reader = new FileReader()
 
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const content = event.target?.result as string
       if (!content) {
         resolve({
@@ -105,7 +107,7 @@ export async function parseFile(file: File): Promise<ParseResult> {
         return
       }
 
-      const result = parseCSV(content)
+      const result = await parseCSV(content)
       resolve(result)
     }
 

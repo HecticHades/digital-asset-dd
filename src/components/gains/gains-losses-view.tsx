@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
@@ -34,6 +34,12 @@ const METHOD_OPTIONS = Object.entries(COST_BASIS_METHODS).map(([value, { label }
   label,
 }))
 
+// Extracted to avoid recreating on each render
+function GainLossDisplay({ value }: { value: number }) {
+  const { formatted, colorClass } = formatGainLoss(value)
+  return <span className={colorClass}>{formatted}</span>
+}
+
 // Tab type
 type ViewTab = 'summary' | 'disposals' | 'holdings' | 'assets'
 
@@ -45,12 +51,14 @@ export function GainsLossesView({ clientId }: GainsLossesViewProps) {
   const [activeTab, setActiveTab] = useState<ViewTab>('summary')
   const [year, setYear] = useState<string>(new Date().getFullYear().toString())
 
-  // Year options (last 5 years)
-  const currentYear = new Date().getFullYear()
-  const yearOptions = Array.from({ length: 5 }, (_, i) => ({
-    value: String(currentYear - i),
-    label: String(currentYear - i),
-  }))
+  // Year options (last 5 years) - memoized to avoid recalculation
+  const yearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    return Array.from({ length: 5 }, (_, i) => ({
+      value: String(currentYear - i),
+      label: String(currentYear - i),
+    }))
+  }, [])
 
   const fetchGainsLosses = useCallback(async () => {
     setLoading(true)
@@ -115,26 +123,22 @@ export function GainsLossesView({ clientId }: GainsLossesViewProps) {
     )
   }
 
-  const formatCurrency = (value: number) => {
+  // Stable formatter functions - useCallback to prevent recreation
+  const formatCurrency = useCallback((value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value)
-  }
+  }, [])
 
-  const formatAmount = (value: number) => {
+  const formatAmount = useCallback((value: number) => {
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 8,
     }).format(value)
-  }
-
-  const GainLossDisplay = ({ value }: { value: number }) => {
-    const { formatted, colorClass } = formatGainLoss(value)
-    return <span className={colorClass}>{formatted}</span>
-  }
+  }, [])
 
   if (loading && !result) {
     return (

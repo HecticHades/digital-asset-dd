@@ -1,9 +1,10 @@
+import { Suspense, cache } from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { CaseStatus, FindingSeverity } from '@prisma/client'
-import { DashboardOverview } from '@/components/dashboard'
+import { DashboardOverview } from '@/components/dashboard/dashboard-overview'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,8 @@ interface CasesByStatus {
   count: number
 }
 
-async function getDashboardStats(organizationId: string): Promise<DashboardStats> {
+// Cache data fetching functions for request deduplication
+const getDashboardStats = cache(async (organizationId: string): Promise<DashboardStats> => {
   try {
     const [totalClients, activeCases, pendingReviews, highRiskFlags] = await Promise.all([
       prisma.client.count({
@@ -59,9 +61,9 @@ async function getDashboardStats(organizationId: string): Promise<DashboardStats
   } catch {
     return { totalClients: 0, activeCases: 0, pendingReviews: 0, highRiskFlags: 0 }
   }
-}
+})
 
-async function getRecentActivity(organizationId: string): Promise<RecentActivity[]> {
+const getRecentActivity = cache(async (organizationId: string): Promise<RecentActivity[]> => {
   try {
     const [recentCases, recentClients, recentFindings] = await Promise.all([
       prisma.case.findMany({
@@ -114,9 +116,9 @@ async function getRecentActivity(organizationId: string): Promise<RecentActivity
   } catch {
     return []
   }
-}
+})
 
-async function getCasesByStatus(organizationId: string): Promise<CasesByStatus[]> {
+const getCasesByStatus = cache(async (organizationId: string): Promise<CasesByStatus[]> => {
   try {
     const cases = await prisma.case.groupBy({
       by: ['status'],
@@ -131,7 +133,7 @@ async function getCasesByStatus(organizationId: string): Promise<CasesByStatus[]
   } catch {
     return []
   }
-}
+})
 
 const statusLabels: Record<CaseStatus, string> = {
   DRAFT: 'Draft',

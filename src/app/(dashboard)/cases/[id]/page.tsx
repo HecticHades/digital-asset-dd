@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
@@ -43,7 +44,8 @@ const RISK_STYLES: Record<string, { bg: string; text: string; border: string }> 
   CRITICAL: { bg: 'bg-risk-500/20', text: 'text-risk-300', border: 'border-risk-500/50' },
 }
 
-async function getCase(id: string, organizationId: string) {
+// Cache case fetching for request deduplication
+const getCase = cache(async (id: string, organizationId: string) => {
   try {
     return await prisma.case.findFirst({
       where: {
@@ -134,7 +136,7 @@ async function getCase(id: string, organizationId: string) {
   } catch {
     return null
   }
-}
+})
 
 export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
   const user = await getCurrentUser()

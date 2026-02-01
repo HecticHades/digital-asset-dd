@@ -1,9 +1,47 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { format, formatDistanceToNow } from 'date-fns'
+
+// Isolated clock component to prevent full tree re-renders
+const LiveClock = memo(function LiveClock() {
+  const [currentTime, setCurrentTime] = useState<Date | null>(null)
+
+  useEffect(() => {
+    // Set initial time on client
+    setCurrentTime(new Date())
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Show static placeholder during SSR/hydration
+  if (!currentTime) {
+    return <span className="text-neon-400">--:--:--</span>
+  }
+
+  return <span className="text-neon-400">{format(currentTime, 'HH:mm:ss')}</span>
+})
+
+// Isolated date display to prevent re-renders
+const CurrentDate = memo(function CurrentDate() {
+  const [date, setDate] = useState<Date | null>(null)
+
+  useEffect(() => {
+    setDate(new Date())
+  }, [])
+
+  if (!date) {
+    return <span className="text-void-400 text-sm font-mono mb-1">&nbsp;</span>
+  }
+
+  return (
+    <p className="text-void-400 text-sm font-mono mb-1">
+      {format(date, 'EEEE, MMMM d, yyyy')}
+    </p>
+  )
+})
 
 interface DashboardStats {
   totalClients: number
@@ -47,8 +85,14 @@ interface DashboardOverviewProps {
   userName?: string
 }
 
-// Animated counter component
-function AnimatedCounter({ value, duration = 1000 }: { value: number; duration?: number }) {
+// Animated counter component - memoized to prevent unnecessary re-renders
+const AnimatedCounter = memo(function AnimatedCounter({
+  value,
+  duration = 1000
+}: {
+  value: number
+  duration?: number
+}) {
   const [displayValue, setDisplayValue] = useState(0)
 
   useEffect(() => {
@@ -71,7 +115,7 @@ function AnimatedCounter({ value, duration = 1000 }: { value: number; duration?:
   }, [value, duration])
 
   return <span className="tabular-nums">{displayValue.toLocaleString()}</span>
-}
+})
 
 // Stat card with glow effects
 function StatCard({
@@ -406,13 +450,6 @@ export function DashboardOverview({
   alerts = [],
   userName,
 }: DashboardOverviewProps) {
-  const [currentTime, setCurrentTime] = useState(new Date())
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -422,9 +459,7 @@ export function DashboardOverview({
         className="flex flex-col md:flex-row md:items-end md:justify-between gap-4"
       >
         <div>
-          <p className="text-void-400 text-sm font-mono mb-1">
-            {format(currentTime, 'EEEE, MMMM d, yyyy')}
-          </p>
+          <CurrentDate />
           <h1 className="text-3xl md:text-4xl font-display font-bold text-void-100">
             {userName ? `Welcome back, ${userName}` : 'Dashboard'}
           </h1>
@@ -436,7 +471,7 @@ export function DashboardOverview({
           <div className="w-2 h-2 rounded-full bg-profit-400 animate-pulse" />
           <span className="text-void-400">System Online</span>
           <span className="text-void-600 mx-2">|</span>
-          <span className="text-neon-400">{format(currentTime, 'HH:mm:ss')}</span>
+          <LiveClock />
         </div>
       </motion.div>
 

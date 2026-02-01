@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
@@ -28,7 +29,8 @@ const RISK_STYLES: Record<string, { bg: string; text: string; border: string }> 
   CRITICAL: { bg: 'bg-risk-500/20', text: 'text-risk-300', border: 'border-risk-500/50' },
 }
 
-async function getClient(id: string, organizationId: string) {
+// Cache client fetching for request deduplication
+const getClient = cache(async (id: string, organizationId: string) => {
   try {
     return await prisma.client.findFirst({
       where: {
@@ -60,7 +62,7 @@ async function getClient(id: string, organizationId: string) {
   } catch {
     return null
   }
-}
+})
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const user = await getCurrentUser()
