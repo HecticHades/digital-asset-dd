@@ -2,9 +2,6 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { StatusBadge, RiskBadge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { ClientTabs } from './client-tabs'
 import { getDocumentChecklistStatus } from './documents/actions'
@@ -15,6 +12,20 @@ export const dynamic = 'force-dynamic'
 
 interface ClientDetailPageProps {
   params: Promise<{ id: string }>
+}
+
+const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  ACTIVE: { bg: 'bg-profit-500/10', text: 'text-profit-400', border: 'border-profit-500/30' },
+  PENDING: { bg: 'bg-caution-500/10', text: 'text-caution-400', border: 'border-caution-500/30' },
+  INACTIVE: { bg: 'bg-void-700', text: 'text-void-400', border: 'border-void-600' },
+  SUSPENDED: { bg: 'bg-risk-500/10', text: 'text-risk-400', border: 'border-risk-500/30' },
+}
+
+const RISK_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  LOW: { bg: 'bg-profit-500/10', text: 'text-profit-400', border: 'border-profit-500/30' },
+  MEDIUM: { bg: 'bg-caution-500/10', text: 'text-caution-400', border: 'border-caution-500/30' },
+  HIGH: { bg: 'bg-risk-500/10', text: 'text-risk-400', border: 'border-risk-500/30' },
+  CRITICAL: { bg: 'bg-risk-500/20', text: 'text-risk-300', border: 'border-risk-500/50' },
 }
 
 async function getClient(id: string, organizationId: string) {
@@ -68,13 +79,16 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     notFound()
   }
 
+  const statusStyle = STATUS_STYLES[client.status] || STATUS_STYLES.PENDING
+  const riskStyle = RISK_STYLES[client.riskLevel] || RISK_STYLES.MEDIUM
+
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
+      <div>
         <Link
           href="/clients"
-          className="text-sm text-slate-600 hover:text-slate-900 flex items-center gap-1 mb-4"
+          className="text-sm text-void-500 hover:text-neon-400 flex items-center gap-1 mb-4 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -84,58 +98,47 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
 
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{client.name}</h1>
-            <p className="text-slate-600 mt-1">{client.email || 'No email provided'}</p>
+            <h1 className="text-2xl font-display font-bold text-void-100">{client.name}</h1>
+            <p className="text-void-400 mt-1">{client.email || 'No email provided'}</p>
           </div>
           <div className="flex items-center gap-3">
-            <StatusBadge status={client.status} />
-            <RiskBadge level={client.riskLevel} />
-            <Link href={`/clients/${client.id}/edit`}>
-              <Button variant="outline" size="sm">
-                Edit Client
-              </Button>
+            <span className={`px-2 py-1 rounded text-xs font-mono ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border}`}>
+              {client.status}
+            </span>
+            <span className={`px-2 py-1 rounded text-xs font-mono ${riskStyle.bg} ${riskStyle.text} border ${riskStyle.border}`}>
+              {client.riskLevel} Risk
+            </span>
+            <Link
+              href={`/clients/${client.id}/edit`}
+              className="px-4 py-2 rounded-lg bg-void-800/50 border border-void-700/50 text-void-200 hover:bg-void-700/50 hover:border-void-600 transition-all text-sm font-medium"
+            >
+              Edit Client
             </Link>
           </div>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Wallets</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{client.wallets.length}</div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="stat-card border-neon-500/30 hover:border-neon-400/50">
+          <div className="text-2xl font-display font-bold text-neon-400">{client.wallets.length}</div>
+          <p className="text-sm text-void-400 mt-1">Wallets</p>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Documents</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{client.documents.length}</div>
-          </CardContent>
-        </Card>
+        <div className="stat-card">
+          <div className="text-2xl font-display font-bold text-void-100">{client.documents.length}</div>
+          <p className="text-sm text-void-400 mt-1">Documents</p>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{client.transactions.length}+</div>
-          </CardContent>
-        </Card>
+        <div className="stat-card">
+          <div className="text-2xl font-display font-bold text-void-100">{client.transactions.length}+</div>
+          <p className="text-sm text-void-400 mt-1">Transactions</p>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Cases</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{client.cases.length}</div>
-          </CardContent>
-        </Card>
+        <div className="stat-card border-signal-500/30 hover:border-signal-400/50">
+          <div className="text-2xl font-display font-bold text-signal-400">{client.cases.length}</div>
+          <p className="text-sm text-void-400 mt-1">Cases</p>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -147,38 +150,5 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         hasPortalAccount={!!client.portalUser}
       />
     </div>
-  )
-}
-
-// Client info card for Overview tab
-function ClientInfoCard({ client }: { client: { phone?: string | null; address?: string | null; notes?: string | null; createdAt: Date; updatedAt: Date } }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Client Information</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <dt className="text-sm font-medium text-slate-500">Phone</dt>
-          <dd className="mt-1 text-sm text-slate-900">{client.phone || '-'}</dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-slate-500">Address</dt>
-          <dd className="mt-1 text-sm text-slate-900">{client.address || '-'}</dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-slate-500">Notes</dt>
-          <dd className="mt-1 text-sm text-slate-900 whitespace-pre-wrap">{client.notes || '-'}</dd>
-        </div>
-        <div className="pt-4 border-t border-slate-200">
-          <dt className="text-sm font-medium text-slate-500">Created</dt>
-          <dd className="mt-1 text-sm text-slate-900">{format(client.createdAt, 'PPpp')}</dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-slate-500">Last Updated</dt>
-          <dd className="mt-1 text-sm text-slate-900">{format(client.updatedAt, 'PPpp')}</dd>
-        </div>
-      </CardContent>
-    </Card>
   )
 }

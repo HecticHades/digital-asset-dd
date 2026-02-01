@@ -2,18 +2,415 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  color: rgb(15, 23, 42); /* slate-900 */
-  background-color: rgb(248, 250, 252); /* slate-50 */
+@layer base {
+  :root {
+    --background: 2 6 23;
+    --foreground: 248 250 252;
+    --card: 15 23 42;
+    --card-foreground: 248 250 252;
+    --muted: 30 41 59;
+    --muted-foreground: 148 163 184;
+    --border: 51 65 85;
+    --ring: 6 182 212;
+  }
+
+  * {
+    @apply border-void-700/50;
+  }
+
+  html {
+    @apply antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-void-950 text-void-100 font-body;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(59, 130, 246, 0.05), transparent);
+    min-height: 100vh;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-void-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-void-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-void-500;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-neon-500/30 text-white;
+  }
 }
 
-/* Ensure form inputs always have dark text */
-input, textarea, select {
-  color: rgb(15, 23, 42) !important; /* slate-900 */
+@layer components {
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-void-900/60 backdrop-blur-xl border border-void-700/50 rounded-xl;
+    box-shadow:
+      0 0 0 1px rgba(6, 182, 212, 0.05),
+      0 4px 24px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
+  }
+
+  .glass-card-hover:hover {
+    @apply border-neon-500/30;
+    box-shadow:
+      0 0 0 1px rgba(6, 182, 212, 0.1),
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 0 30px -10px rgba(6, 182, 212, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  /* Data panel */
+  .data-panel {
+    @apply bg-void-900/80 border border-void-700/30 rounded-lg p-4;
+    background-image: linear-gradient(
+      135deg,
+      rgba(6, 182, 212, 0.02) 0%,
+      transparent 50%
+    );
+  }
+
+  /* Stat card with glow */
+  .stat-card {
+    @apply relative overflow-hidden bg-void-900/60 border border-void-700/50 rounded-xl p-5;
+    background-image: linear-gradient(
+      135deg,
+      rgba(6, 182, 212, 0.03) 0%,
+      transparent 60%
+    );
+  }
+
+  .stat-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: radial-gradient(
+      600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(6, 182, 212, 0.06),
+      transparent 40%
+    );
+  }
+
+  .stat-card:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Glow border effect */
+  .glow-border {
+    @apply relative;
+  }
+
+  .glow-border::before {
+    content: '';
+    @apply absolute -inset-px rounded-xl opacity-0 transition-opacity duration-300;
+    background: linear-gradient(
+      135deg,
+      rgba(6, 182, 212, 0.4),
+      rgba(59, 130, 246, 0.2),
+      rgba(139, 92, 246, 0.2),
+      rgba(6, 182, 212, 0.4)
+    );
+    z-index: -1;
+  }
+
+  .glow-border:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Terminal-style data display */
+  .terminal-text {
+    @apply font-mono text-sm text-neon-400;
+    text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+  }
+
+  .terminal-box {
+    @apply bg-void-950 border border-void-700/50 rounded-lg p-3 font-mono text-sm;
+    background-image: linear-gradient(
+      0deg,
+      rgba(6, 182, 212, 0.02) 1px,
+      transparent 1px
+    );
+    background-size: 100% 24px;
+  }
+
+  /* Data grid lines */
+  .grid-lines {
+    background-image:
+      linear-gradient(rgba(51, 65, 85, 0.3) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(51, 65, 85, 0.3) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Animated gradient border */
+  .gradient-border {
+    @apply relative rounded-xl;
+  }
+
+  .gradient-border::before {
+    content: '';
+    @apply absolute -inset-px rounded-xl;
+    background: linear-gradient(
+      var(--gradient-angle, 135deg),
+      #06b6d4,
+      #3b82f6,
+      #8b5cf6,
+      #06b6d4
+    );
+    z-index: -1;
+    animation: rotate-gradient 4s linear infinite;
+  }
+
+  @keyframes rotate-gradient {
+    0% { --gradient-angle: 0deg; }
+    100% { --gradient-angle: 360deg; }
+  }
+
+  /* Risk level indicators */
+  .risk-critical {
+    @apply text-risk-500;
+    text-shadow: 0 0 12px rgba(244, 63, 94, 0.6);
+  }
+
+  .risk-high {
+    @apply text-risk-400;
+    text-shadow: 0 0 8px rgba(244, 63, 94, 0.4);
+  }
+
+  .risk-medium {
+    @apply text-caution-400;
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+  }
+
+  .risk-low {
+    @apply text-profit-400;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
+  }
+
+  /* Profit/loss indicators */
+  .profit-text {
+    @apply text-profit-400;
+    text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  }
+
+  .loss-text {
+    @apply text-risk-400;
+    text-shadow: 0 0 8px rgba(244, 63, 94, 0.4);
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(6, 182, 212, 0.1),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Pulse dot */
+  .pulse-dot {
+    @apply relative;
+  }
+
+  .pulse-dot::after {
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  .pulse-dot.live::after {
+    @apply bg-profit-400;
+  }
+
+  .pulse-dot.alert::after {
+    @apply bg-risk-400;
+  }
+
+  /* Badge styles */
+  .badge-neon {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply bg-neon-500/10 text-neon-400 border border-neon-500/30;
+  }
+
+  .badge-profit {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply bg-profit-500/10 text-profit-400 border border-profit-500/30;
+  }
+
+  .badge-risk {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply bg-risk-500/10 text-risk-400 border border-risk-500/30;
+  }
+
+  .badge-caution {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply bg-caution-500/10 text-caution-400 border border-caution-500/30;
+  }
+
+  /* Input styles */
+  .input-dark {
+    @apply w-full bg-void-900/80 border border-void-600/50 rounded-lg px-4 py-2.5;
+    @apply text-void-100 placeholder-void-500;
+    @apply focus:outline-none focus:border-neon-500/50 focus:ring-1 focus:ring-neon-500/30;
+    @apply transition-all duration-200;
+  }
+
+  .input-dark:focus {
+    box-shadow: 0 0 20px -5px rgba(6, 182, 212, 0.2);
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center px-5 py-2.5 rounded-lg;
+    @apply bg-neon-500 text-void-950 font-semibold;
+    @apply hover:bg-neon-400 active:bg-neon-600;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-neon-500/50 focus:ring-offset-2 focus:ring-offset-void-950;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.5);
+  }
+
+  .btn-secondary {
+    @apply relative inline-flex items-center justify-center px-5 py-2.5 rounded-lg;
+    @apply bg-void-800 text-void-100 font-medium border border-void-600/50;
+    @apply hover:bg-void-700 hover:border-void-500;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-void-500/50;
+  }
+
+  .btn-ghost {
+    @apply relative inline-flex items-center justify-center px-5 py-2.5 rounded-lg;
+    @apply text-void-300 font-medium;
+    @apply hover:bg-void-800/50 hover:text-void-100;
+    @apply transition-all duration-200;
+  }
+
+  .btn-danger {
+    @apply relative inline-flex items-center justify-center px-5 py-2.5 rounded-lg;
+    @apply bg-risk-500/10 text-risk-400 font-medium border border-risk-500/30;
+    @apply hover:bg-risk-500/20 hover:border-risk-500/50;
+    @apply transition-all duration-200;
+  }
+
+  /* Table styles */
+  .table-dark {
+    @apply w-full;
+  }
+
+  .table-dark thead {
+    @apply border-b border-void-700/50;
+  }
+
+  .table-dark th {
+    @apply px-4 py-3 text-left text-xs font-semibold text-void-400 uppercase tracking-wider;
+  }
+
+  .table-dark tbody tr {
+    @apply border-b border-void-800/50 transition-colors duration-150;
+  }
+
+  .table-dark tbody tr:hover {
+    @apply bg-void-800/30;
+  }
+
+  .table-dark td {
+    @apply px-4 py-4 text-sm text-void-200;
+  }
+
+  /* Chart containers */
+  .chart-container {
+    @apply relative bg-void-900/40 rounded-lg p-4 border border-void-800/50;
+  }
+
+  .chart-container::before {
+    content: '';
+    @apply absolute inset-0 rounded-lg pointer-events-none;
+    background: linear-gradient(
+      180deg,
+      rgba(6, 182, 212, 0.02) 0%,
+      transparent 30%
+    );
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  .text-glow-sm {
+    text-shadow: 0 0 5px currentColor;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-neon-400 via-signal-400 to-neon-400 bg-clip-text text-transparent;
+  }
+
+  /* Noise texture overlay */
+  .noise-overlay {
+    @apply pointer-events-none;
+  }
+
+  .noise-overlay::after {
+    content: '';
+    @apply absolute inset-0 opacity-[0.015] pointer-events-none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+
+  /* Mask gradients */
+  .mask-gradient-b {
+    mask-image: linear-gradient(to bottom, black 60%, transparent);
+  }
+
+  .mask-gradient-r {
+    mask-image: linear-gradient(to right, black 60%, transparent);
+  }
+
+  /* Animation delays */
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+}
+
+/* Form inputs - ensure visible text in dark mode */
+input, textarea, select {
+  color: inherit;
+}
+
+input::placeholder, textarea::placeholder {
+  @apply text-void-500;
 }

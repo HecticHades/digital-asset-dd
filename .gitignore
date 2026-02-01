@@ -51,3 +51,6 @@ progress.txt
 .ralph-archive/
 .ralph-last-branch
 nul
+
+# scripts with sensitive data
+scripts/reset-password.ts

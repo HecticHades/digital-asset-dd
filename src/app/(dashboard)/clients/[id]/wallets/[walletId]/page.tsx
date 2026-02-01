@@ -1,9 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { WalletTransactionTimeline } from '@/components/wallets/wallet-transaction-timeline'
 import { getAddressExplorerUrl } from '@/lib/blockchain'
 import { format } from 'date-fns'
@@ -33,6 +30,18 @@ const BLOCKCHAIN_NAMES: Record<Blockchain, string> = {
   OTHER: 'Other',
 }
 
+const BLOCKCHAIN_COLORS: Record<Blockchain, { bg: string; text: string; border: string }> = {
+  ETHEREUM: { bg: 'bg-signal-500/10', text: 'text-signal-400', border: 'border-signal-500/30' },
+  BITCOIN: { bg: 'bg-caution-500/10', text: 'text-caution-400', border: 'border-caution-500/30' },
+  POLYGON: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/30' },
+  ARBITRUM: { bg: 'bg-signal-500/10', text: 'text-signal-400', border: 'border-signal-500/30' },
+  OPTIMISM: { bg: 'bg-risk-500/10', text: 'text-risk-400', border: 'border-risk-500/30' },
+  BSC: { bg: 'bg-caution-500/10', text: 'text-caution-400', border: 'border-caution-500/30' },
+  AVALANCHE: { bg: 'bg-risk-500/10', text: 'text-risk-400', border: 'border-risk-500/30' },
+  SOLANA: { bg: 'bg-neon-500/10', text: 'text-neon-400', border: 'border-neon-500/30' },
+  OTHER: { bg: 'bg-void-700', text: 'text-void-300', border: 'border-void-600' },
+}
+
 export default async function WalletPage({ params }: WalletPageProps) {
   const { id: clientId, walletId } = await params
 
@@ -60,6 +69,7 @@ export default async function WalletPage({ params }: WalletPageProps) {
   }
 
   const explorerUrl = getAddressExplorerUrl(wallet.address, wallet.blockchain)
+  const blockchainColors = BLOCKCHAIN_COLORS[wallet.blockchain]
 
   // Calculate transaction stats
   const stats = {
@@ -76,34 +86,40 @@ export default async function WalletPage({ params }: WalletPageProps) {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/clients" className="hover:text-slate-700">
+      <div className="flex items-center gap-2 text-sm text-void-500 font-mono">
+        <Link href="/clients" className="hover:text-neon-400 transition-colors">
           Clients
         </Link>
-        <span>/</span>
-        <Link href={`/clients/${clientId}`} className="hover:text-slate-700">
+        <span className="text-void-700">/</span>
+        <Link href={`/clients/${clientId}`} className="hover:text-neon-400 transition-colors">
           {wallet.client.name}
         </Link>
-        <span>/</span>
-        <span className="text-slate-900">Wallet</span>
+        <span className="text-void-700">/</span>
+        <span className="text-void-300">Wallet</span>
       </div>
 
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="text-2xl font-display font-bold text-void-100">
               {wallet.label || 'Wallet'}
             </h1>
-            <Badge>{BLOCKCHAIN_NAMES[wallet.blockchain]}</Badge>
+            <span className={`px-2 py-1 rounded text-xs font-mono ${blockchainColors.bg} ${blockchainColors.text} border ${blockchainColors.border}`}>
+              {BLOCKCHAIN_NAMES[wallet.blockchain]}
+            </span>
             {wallet.isVerified ? (
-              <Badge variant="success">Verified</Badge>
+              <span className="px-2 py-1 rounded text-xs font-mono bg-profit-500/10 text-profit-400 border border-profit-500/30">
+                Verified
+              </span>
             ) : (
-              <Badge variant="warning">Unverified</Badge>
+              <span className="px-2 py-1 rounded text-xs font-mono bg-caution-500/10 text-caution-400 border border-caution-500/30">
+                Unverified
+              </span>
             )}
           </div>
           <div className="mt-2 flex items-center gap-2">
-            <span className="font-mono text-sm text-slate-600">
+            <span className="font-mono text-sm text-void-400">
               {wallet.address}
             </span>
             {explorerUrl && (
@@ -111,15 +127,18 @@ export default async function WalletPage({ params }: WalletPageProps) {
                 href={explorerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-600 hover:text-primary-700"
+                className="text-neon-400 hover:text-neon-300 transition-colors"
               >
                 <ExternalLinkIcon className="w-4 h-4" />
               </a>
             )}
           </div>
         </div>
-        <Link href={`/clients/${clientId}`}>
-          <Button variant="outline">Back to Client</Button>
+        <Link
+          href={`/clients/${clientId}`}
+          className="px-4 py-2 rounded-lg bg-void-800/50 border border-void-700/50 text-void-200 hover:bg-void-700/50 hover:border-void-600 transition-all text-sm font-medium"
+        >
+          Back to Client
         </Link>
       </div>
 
@@ -127,39 +146,33 @@ export default async function WalletPage({ params }: WalletPageProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <WalletBalanceCard walletId={walletId} blockchain={wallet.blockchain} />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-slate-900">{stats.totalTx}</div>
-            <p className="text-sm text-slate-500">On-chain Transactions</p>
-          </CardContent>
-        </Card>
+        <div className="stat-card">
+          <div className="text-2xl font-display font-bold text-void-100">{stats.totalTx}</div>
+          <p className="text-sm text-void-400 mt-1">On-chain Transactions</p>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-slate-900">{stats.uniqueAssets}</div>
-            <p className="text-sm text-slate-500">Unique Assets</p>
-          </CardContent>
-        </Card>
+        <div className="stat-card">
+          <div className="text-2xl font-display font-bold text-void-100">{stats.uniqueAssets}</div>
+          <p className="text-sm text-void-400 mt-1">Unique Assets</p>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            {stats.firstTx && stats.lastTx ? (
-              <>
-                <div className="text-lg font-bold text-slate-900">
-                  {format(stats.firstTx, 'MMM d, yyyy')}
-                </div>
-                <p className="text-sm text-slate-500">
-                  First transaction · Last: {format(stats.lastTx, 'MMM d, yyyy')}
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="text-2xl font-bold text-slate-900">-</div>
-                <p className="text-sm text-slate-500">No transactions yet</p>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <div className="stat-card">
+          {stats.firstTx && stats.lastTx ? (
+            <>
+              <div className="text-lg font-display font-bold text-void-100">
+                {format(stats.firstTx, 'MMM d, yyyy')}
+              </div>
+              <p className="text-sm text-void-400 mt-1">
+                First tx · Last: {format(stats.lastTx, 'MMM d')}
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="text-2xl font-display font-bold text-void-500">-</div>
+              <p className="text-sm text-void-400 mt-1">No transactions yet</p>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Risk Flags */}
@@ -172,47 +185,49 @@ export default async function WalletPage({ params }: WalletPageProps) {
 
       {/* Wallet Info */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Wallet Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="glass-card p-6">
+          <h2 className="text-base font-display font-semibold text-void-100 mb-4">Wallet Details</h2>
+          <div className="space-y-4">
             <div>
-              <dt className="text-sm font-medium text-slate-500">Label</dt>
-              <dd className="mt-1 text-sm text-slate-900">{wallet.label || '-'}</dd>
+              <dt className="text-sm font-medium text-void-500">Label</dt>
+              <dd className="mt-1 text-sm text-void-200">{wallet.label || '-'}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">Blockchain</dt>
-              <dd className="mt-1 text-sm text-slate-900">
+              <dt className="text-sm font-medium text-void-500">Blockchain</dt>
+              <dd className="mt-1 text-sm text-void-200">
                 {BLOCKCHAIN_NAMES[wallet.blockchain]}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">Verified</dt>
+              <dt className="text-sm font-medium text-void-500">Verified</dt>
               <dd className="mt-1">
                 {wallet.isVerified ? (
-                  <Badge variant="success">Yes</Badge>
+                  <span className="px-2 py-1 rounded text-xs font-mono bg-profit-500/10 text-profit-400 border border-profit-500/30">
+                    Yes
+                  </span>
                 ) : (
-                  <Badge variant="warning">No</Badge>
+                  <span className="px-2 py-1 rounded text-xs font-mono bg-caution-500/10 text-caution-400 border border-caution-500/30">
+                    No
+                  </span>
                 )}
               </dd>
             </div>
             {wallet.proofDocument && (
               <div>
-                <dt className="text-sm font-medium text-slate-500">Proof Document</dt>
-                <dd className="mt-1 text-sm text-slate-900">
+                <dt className="text-sm font-medium text-void-500">Proof Document</dt>
+                <dd className="mt-1 text-sm text-void-200">
                   {wallet.proofDocument.originalName}
                 </dd>
               </div>
             )}
             <div>
-              <dt className="text-sm font-medium text-slate-500">Added</dt>
-              <dd className="mt-1 text-sm text-slate-900">
+              <dt className="text-sm font-medium text-void-500">Added</dt>
+              <dd className="mt-1 text-sm text-void-200 font-mono">
                 {format(wallet.createdAt, 'PPpp')}
               </dd>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <div className="lg:col-span-2">
           <WalletTransactionTimeline
@@ -225,18 +240,14 @@ export default async function WalletPage({ params }: WalletPageProps) {
       </div>
 
       {/* DEX Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>DEX Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DEXActivityView
-            walletId={wallet.id}
-            walletAddress={wallet.address}
-            blockchain={wallet.blockchain}
-          />
-        </CardContent>
-      </Card>
+      <div className="glass-card p-6">
+        <h2 className="text-lg font-display font-semibold text-void-100 mb-4">DEX Activity</h2>
+        <DEXActivityView
+          walletId={wallet.id}
+          walletAddress={wallet.address}
+          blockchain={wallet.blockchain}
+        />
+      </div>
     </div>
   )
 }

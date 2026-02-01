@@ -2,16 +2,6 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
-import { Button } from '@/components/ui/button'
-import { StatusBadge, RiskBadge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { format } from 'date-fns'
 import { CaseFilters } from './case-filters'
 
@@ -23,6 +13,23 @@ interface CasesPageProps {
     riskLevel?: string
     assignedToId?: string
   }>
+}
+
+const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  DRAFT: { bg: 'bg-void-700', text: 'text-void-300', border: 'border-void-600' },
+  IN_PROGRESS: { bg: 'bg-neon-500/10', text: 'text-neon-400', border: 'border-neon-500/30' },
+  PENDING_REVIEW: { bg: 'bg-caution-500/10', text: 'text-caution-400', border: 'border-caution-500/30' },
+  APPROVED: { bg: 'bg-profit-500/10', text: 'text-profit-400', border: 'border-profit-500/30' },
+  REJECTED: { bg: 'bg-risk-500/10', text: 'text-risk-400', border: 'border-risk-500/30' },
+  COMPLETED: { bg: 'bg-signal-500/10', text: 'text-signal-400', border: 'border-signal-500/30' },
+  ARCHIVED: { bg: 'bg-void-800', text: 'text-void-500', border: 'border-void-700' },
+}
+
+const RISK_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  LOW: { bg: 'bg-profit-500/10', text: 'text-profit-400', border: 'border-profit-500/30' },
+  MEDIUM: { bg: 'bg-caution-500/10', text: 'text-caution-400', border: 'border-caution-500/30' },
+  HIGH: { bg: 'bg-risk-500/10', text: 'text-risk-400', border: 'border-risk-500/30' },
+  CRITICAL: { bg: 'bg-risk-500/20', text: 'text-risk-300', border: 'border-risk-500/50' },
 }
 
 async function getCases(organizationId: string, filters: {
@@ -66,7 +73,6 @@ async function getCases(organizationId: string, filters: {
       },
     })
   } catch {
-    // Database might not be set up yet
     return []
   }
 }
@@ -106,29 +112,20 @@ export default async function CasesPage({ searchParams }: CasesPageProps) {
   ])
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Cases</h1>
-          <p className="text-slate-600 mt-1">Manage due diligence cases</p>
+          <h1 className="text-3xl font-display font-bold text-void-100">Cases</h1>
+          <p className="text-void-400 mt-2">Manage due diligence cases</p>
         </div>
-        <Link href="/cases/new">
-          <Button>
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            New Case
-          </Button>
+        <Link
+          href="/cases/new"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-neon-500/10 border border-neon-500/30 text-neon-400 hover:bg-neon-500/20 hover:border-neon-400/50 transition-all text-sm font-medium"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          New Case
         </Link>
       </div>
 
@@ -136,82 +133,84 @@ export default async function CasesPage({ searchParams }: CasesPageProps) {
       <CaseFilters analysts={analysts} currentFilters={params} />
 
       {cases.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
-          <svg
-            className="mx-auto h-12 w-12 text-slate-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <h3 className="mt-4 text-lg font-medium text-slate-900">No cases found</h3>
-          <p className="mt-2 text-sm text-slate-500">
+        <div className="glass-card p-12 text-center">
+          <div className="w-16 h-16 rounded-full bg-void-800 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-void-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-display font-semibold text-void-100 mb-2">No cases found</h3>
+          <p className="text-void-400 text-sm mb-4">
             {Object.keys(params).length > 0
               ? 'Try adjusting your filters or create a new case.'
               : 'Get started by creating your first case.'}
           </p>
-          <div className="mt-6">
-            <Link href="/cases/new">
-              <Button>New Case</Button>
-            </Link>
-          </div>
+          <Link
+            href="/cases/new"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-neon-500/10 border border-neon-500/30 text-neon-400 hover:bg-neon-500/20 transition-colors text-sm font-medium"
+          >
+            New Case
+          </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-slate-200">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Risk Level</TableHead>
-                <TableHead>Assigned To</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {cases.map((caseItem) => (
-                <TableRow key={caseItem.id}>
-                  <TableCell className="font-medium">{caseItem.title}</TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/clients/${caseItem.client.id}`}
-                      className="text-primary-600 hover:text-primary-700"
-                    >
-                      {caseItem.client.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={caseItem.status} />
-                  </TableCell>
-                  <TableCell>
-                    <RiskBadge level={caseItem.riskLevel} />
-                  </TableCell>
-                  <TableCell>{caseItem.assignedTo?.name || '-'}</TableCell>
-                  <TableCell>
-                    {caseItem.dueDate ? format(caseItem.dueDate, 'MMM d, yyyy') : '-'}
-                  </TableCell>
-                  <TableCell>{format(caseItem.createdAt, 'MMM d, yyyy')}</TableCell>
-                  <TableCell className="text-right">
-                    <Link
-                      href={`/cases/${caseItem.id}`}
-                      className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-                    >
-                      View
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="glass-card overflow-hidden">
+          <table className="table-dark">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Client</th>
+                <th>Status</th>
+                <th>Risk Level</th>
+                <th>Assigned To</th>
+                <th>Due Date</th>
+                <th>Created</th>
+                <th className="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cases.map((caseItem) => {
+                const statusStyle = STATUS_STYLES[caseItem.status] || STATUS_STYLES.DRAFT
+                const riskStyle = RISK_STYLES[caseItem.riskLevel] || RISK_STYLES.MEDIUM
+
+                return (
+                  <tr key={caseItem.id} className="group">
+                    <td className="font-medium text-void-100">{caseItem.title}</td>
+                    <td>
+                      <Link
+                        href={`/clients/${caseItem.client.id}`}
+                        className="text-neon-400 hover:text-neon-300 transition-colors"
+                      >
+                        {caseItem.client.name}
+                      </Link>
+                    </td>
+                    <td>
+                      <span className={`px-2 py-1 rounded text-xs font-mono ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border}`}>
+                        {caseItem.status.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`px-2 py-1 rounded text-xs font-mono ${riskStyle.bg} ${riskStyle.text} border ${riskStyle.border}`}>
+                        {caseItem.riskLevel}
+                      </span>
+                    </td>
+                    <td className="text-void-400">{caseItem.assignedTo?.name || '-'}</td>
+                    <td className="text-void-400 font-mono text-sm">
+                      {caseItem.dueDate ? format(caseItem.dueDate, 'MMM d, yyyy') : '-'}
+                    </td>
+                    <td className="text-void-400 font-mono text-sm">{format(caseItem.createdAt, 'MMM d, yyyy')}</td>
+                    <td className="text-right">
+                      <Link
+                        href={`/cases/${caseItem.id}`}
+                        className="text-neon-400 hover:text-neon-300 text-sm font-medium transition-colors"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

@@ -2,9 +2,6 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { StatusBadge, RiskBadge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { CaseTabs } from './case-tabs'
 import { CaseArchiveButton } from './case-archive-button'
@@ -27,6 +24,23 @@ export const dynamic = 'force-dynamic'
 
 interface CaseDetailPageProps {
   params: Promise<{ id: string }>
+}
+
+const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  DRAFT: { bg: 'bg-void-700', text: 'text-void-300', border: 'border-void-600' },
+  IN_PROGRESS: { bg: 'bg-neon-500/10', text: 'text-neon-400', border: 'border-neon-500/30' },
+  PENDING_REVIEW: { bg: 'bg-caution-500/10', text: 'text-caution-400', border: 'border-caution-500/30' },
+  APPROVED: { bg: 'bg-profit-500/10', text: 'text-profit-400', border: 'border-profit-500/30' },
+  REJECTED: { bg: 'bg-risk-500/10', text: 'text-risk-400', border: 'border-risk-500/30' },
+  COMPLETED: { bg: 'bg-signal-500/10', text: 'text-signal-400', border: 'border-signal-500/30' },
+  ARCHIVED: { bg: 'bg-void-800', text: 'text-void-500', border: 'border-void-700' },
+}
+
+const RISK_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  LOW: { bg: 'bg-profit-500/10', text: 'text-profit-400', border: 'border-profit-500/30' },
+  MEDIUM: { bg: 'bg-caution-500/10', text: 'text-caution-400', border: 'border-caution-500/30' },
+  HIGH: { bg: 'bg-risk-500/10', text: 'text-risk-400', border: 'border-risk-500/30' },
+  CRITICAL: { bg: 'bg-risk-500/20', text: 'text-risk-300', border: 'border-risk-500/50' },
 }
 
 async function getCase(id: string, organizationId: string) {
@@ -134,6 +148,9 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
     notFound()
   }
 
+  const statusStyle = STATUS_STYLES[caseData.status] || STATUS_STYLES.DRAFT
+  const riskStyle = RISK_STYLES[caseData.riskLevel] || RISK_STYLES.MEDIUM
+
   // Calculate timeline events
   const timelineEvents = [
     {
@@ -226,13 +243,20 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
     date: e.date.toISOString(),
   }))
 
+  // Get risk score color for dark theme
+  const getRiskColorClass = (score: number) => {
+    if (score < 30) return 'text-profit-400'
+    if (score < 60) return 'text-caution-400'
+    return 'text-risk-400'
+  }
+
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
+      <div>
         <Link
           href="/cases"
-          className="text-sm text-slate-600 hover:text-slate-900 flex items-center gap-1 mb-4"
+          className="text-sm text-void-500 hover:text-neon-400 flex items-center gap-1 mb-4 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -242,124 +266,101 @@ export default async function CaseDetailPage({ params }: CaseDetailPageProps) {
 
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{caseData.title}</h1>
-            <p className="text-slate-600 mt-1">
+            <h1 className="text-2xl font-display font-bold text-void-100">{caseData.title}</h1>
+            <p className="text-void-400 mt-1">
               Client:{' '}
-              <Link href={`/clients/${caseData.client.id}`} className="text-primary-600 hover:text-primary-700">
+              <Link href={`/clients/${caseData.client.id}`} className="text-neon-400 hover:text-neon-300 transition-colors">
                 {caseData.client.name}
               </Link>
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <StatusBadge status={caseData.status} />
-            <RiskBadge level={caseData.riskLevel} />
+            <span className={`px-2 py-1 rounded text-xs font-mono ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border}`}>
+              {caseData.status.replace('_', ' ')}
+            </span>
+            <span className={`px-2 py-1 rounded text-xs font-mono ${riskStyle.bg} ${riskStyle.text} border ${riskStyle.border}`}>
+              {caseData.riskLevel} Risk
+            </span>
             {canArchiveCase(caseData.status as CaseStatus) && (
               <CaseArchiveButton caseId={caseData.id} caseTitle={caseData.title} />
             )}
-            <Link href={`/cases/${caseData.id}/edit`}>
-              <Button variant="outline" size="sm">
-                Edit Case
-              </Button>
+            <Link
+              href={`/cases/${caseData.id}/edit`}
+              className="px-4 py-2 rounded-lg bg-void-800/50 border border-void-700/50 text-void-200 hover:bg-void-700/50 hover:border-void-600 transition-all text-sm font-medium"
+            >
+              Edit Case
             </Link>
           </div>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Risk Score</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-2">
-              <span className={`text-2xl font-bold ${getRiskScoreColor(riskBreakdown.overallScore)}`}>
-                {riskBreakdown.overallScore}
-              </span>
-              <span className="text-sm text-slate-500">/ 100</span>
-            </div>
-            <div className={`text-xs mt-1 ${getRiskScoreColor(riskBreakdown.overallScore)}`}>
-              {riskBreakdown.riskLevel}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="stat-card">
+          <p className="text-sm text-void-500 mb-1">Risk Score</p>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-2xl font-display font-bold ${getRiskColorClass(riskBreakdown.overallScore)}`}>
+              {riskBreakdown.overallScore}
+            </span>
+            <span className="text-sm text-void-500">/ 100</span>
+          </div>
+          <div className={`text-xs mt-1 ${getRiskColorClass(riskBreakdown.overallScore)}`}>
+            {riskBreakdown.riskLevel}
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Findings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{caseData.findings.length}</div>
-          </CardContent>
-        </Card>
+        <div className="stat-card border-caution-500/30 hover:border-caution-400/50">
+          <p className="text-sm text-void-500 mb-1">Findings</p>
+          <div className="text-2xl font-display font-bold text-caution-400">{caseData.findings.length}</div>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Checklist</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {caseData.checklistItems.filter((c) => c.isCompleted).length}/
-              {caseData.checklistItems.length}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="stat-card border-signal-500/30 hover:border-signal-400/50">
+          <p className="text-sm text-void-500 mb-1">Checklist</p>
+          <div className="text-2xl font-display font-bold text-signal-400">
+            {caseData.checklistItems.filter((c) => c.isCompleted).length}/
+            {caseData.checklistItems.length}
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Due Date</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-medium">
-              {caseData.dueDate ? format(caseData.dueDate, 'MMM d, yyyy') : 'Not set'}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="stat-card">
+          <p className="text-sm text-void-500 mb-1">Due Date</p>
+          <div className="text-lg font-display font-medium text-void-200">
+            {caseData.dueDate ? format(caseData.dueDate, 'MMM d, yyyy') : 'Not set'}
+          </div>
+        </div>
       </div>
 
       {/* Assignment & Details Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Assigned Analyst</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {caseData.assignedTo ? (
-              <div>
-                <div className="font-medium">{caseData.assignedTo.name}</div>
-                <div className="text-sm text-slate-500">{caseData.assignedTo.email}</div>
-              </div>
-            ) : (
-              <div className="text-slate-500">Unassigned</div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="glass-card p-4">
+          <p className="text-sm text-void-500 mb-2">Assigned Analyst</p>
+          {caseData.assignedTo ? (
+            <div>
+              <div className="font-medium text-void-100">{caseData.assignedTo.name}</div>
+              <div className="text-sm text-void-400">{caseData.assignedTo.email}</div>
+            </div>
+          ) : (
+            <div className="text-void-500">Unassigned</div>
+          )}
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Reviewer</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {caseData.reviewedBy ? (
-              <div>
-                <div className="font-medium">{caseData.reviewedBy.name}</div>
-                <div className="text-sm text-slate-500">{caseData.reviewedBy.email}</div>
-              </div>
-            ) : (
-              <div className="text-slate-500">Not reviewed yet</div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="glass-card p-4">
+          <p className="text-sm text-void-500 mb-2">Reviewer</p>
+          {caseData.reviewedBy ? (
+            <div>
+              <div className="font-medium text-void-100">{caseData.reviewedBy.name}</div>
+              <div className="text-sm text-void-400">{caseData.reviewedBy.email}</div>
+            </div>
+          ) : (
+            <div className="text-void-500">Not reviewed yet</div>
+          )}
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Created</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="font-medium">{format(caseData.createdAt, 'MMM d, yyyy')}</div>
-            <div className="text-sm text-slate-500">{format(caseData.createdAt, 'h:mm a')}</div>
-          </CardContent>
-        </Card>
+        <div className="glass-card p-4">
+          <p className="text-sm text-void-500 mb-2">Created</p>
+          <div className="font-medium text-void-100">{format(caseData.createdAt, 'MMM d, yyyy')}</div>
+          <div className="text-sm text-void-400 font-mono">{format(caseData.createdAt, 'h:mm a')}</div>
+        </div>
       </div>
 
       {/* Tabs */}
