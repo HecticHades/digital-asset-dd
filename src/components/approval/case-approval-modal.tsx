@@ -160,10 +160,11 @@ export function CaseApprovalModal({
           {/* Decision Buttons */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-slate-700">Decision</h4>
-            <div className="flex gap-3">
+            <div className="flex gap-3" role="group" aria-label="Approval decision">
               <button
                 type="button"
                 onClick={() => setSelectedDecision('APPROVE')}
+                aria-pressed={selectedDecision === 'APPROVE'}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
                   selectedDecision === 'APPROVE'
                     ? 'border-green-500 bg-green-50 text-green-700'
@@ -176,6 +177,7 @@ export function CaseApprovalModal({
               <button
                 type="button"
                 onClick={() => setSelectedDecision('REJECT')}
+                aria-pressed={selectedDecision === 'REJECT'}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
                   selectedDecision === 'REJECT'
                     ? 'border-red-500 bg-red-50 text-red-700'

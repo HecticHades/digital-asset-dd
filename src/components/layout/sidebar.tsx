@@ -134,6 +134,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Mobile close button */}
           <button
             onClick={onClose}
+            aria-label="Close navigation menu"
             className="ml-auto lg:hidden p-1.5 text-void-400 hover:text-void-200 hover:bg-void-800 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

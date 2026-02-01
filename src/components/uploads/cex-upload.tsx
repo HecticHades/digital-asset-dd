@@ -226,19 +226,31 @@ interface DropZoneProps {
 }
 
 function DropZone({ isDragging, onDragOver, onDragLeave, onDrop, onBrowseClick }: DropZoneProps) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onBrowseClick()
+    }
+  }
+
   return (
     <div
+      role="button"
+      tabIndex={0}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
+      onClick={onBrowseClick}
+      onKeyDown={handleKeyDown}
+      aria-label="Drop CSV file here or click to browse"
       className={`
         border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
+        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
         ${isDragging
           ? 'border-primary-500 bg-primary-50'
           : 'border-slate-300 hover:border-slate-400'
         }
       `}
-      onClick={onBrowseClick}
     >
       <UploadIcon className="mx-auto h-12 w-12 text-slate-400" />
       <p className="mt-4 text-sm font-medium text-slate-900">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NotificationBell } from '@/components/notifications/notification-bell'
@@ -48,6 +49,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       {/* Mobile menu button */}
       <button
         onClick={onMenuClick}
+        aria-label="Open navigation menu"
         className="lg:hidden p-2 text-void-400 hover:text-void-200 hover:bg-void-800 rounded-lg transition-colors"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,6 +72,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           </svg>
           <input
             type="search"
+            name="search"
             placeholder="Search clients, cases, wallets..."
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
@@ -96,7 +99,10 @@ export function Header({ onMenuClick }: HeaderProps) {
       <div className="flex items-center gap-3">
         {/* Quick actions */}
         <div className="hidden md:flex items-center gap-2">
-          <button className="p-2 text-void-400 hover:text-void-200 hover:bg-void-800 rounded-lg transition-colors">
+          <button
+            aria-label="Help"
+            className="p-2 text-void-400 hover:text-void-200 hover:bg-void-800 rounded-lg transition-colors"
+          >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -113,6 +119,8 @@ export function Header({ onMenuClick }: HeaderProps) {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setUserMenuOpen(!userMenuOpen)}
+            aria-label="User menu"
+            aria-expanded={userMenuOpen}
             className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-void-800/50 transition-colors"
           >
             <div className="w-8 h-8 bg-gradient-to-br from-neon-500/20 to-signal-500/20 rounded-lg flex items-center justify-center border border-neon-500/30">
@@ -155,7 +163,7 @@ export function Header({ onMenuClick }: HeaderProps) {
 
                 {/* Menu items */}
                 <div className="py-1">
-                  <a
+                  <Link
                     href="/settings/profile"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-void-300 hover:bg-void-800 hover:text-void-100 transition-colors"
                   >
@@ -163,8 +171,8 @@ export function Header({ onMenuClick }: HeaderProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     Your Profile
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/settings"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-void-300 hover:bg-void-800 hover:text-void-100 transition-colors"
                   >
@@ -173,8 +181,8 @@ export function Header({ onMenuClick }: HeaderProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     Settings
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/settings/api-keys"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-void-300 hover:bg-void-800 hover:text-void-100 transition-colors"
                   >
@@ -182,7 +190,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                     </svg>
                     API Keys
-                  </a>
+                  </Link>
                 </div>
 
                 {/* Sign out */}

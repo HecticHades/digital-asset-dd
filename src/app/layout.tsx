@@ -36,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" style={{ colorScheme: 'dark' }}>
       <body className={`${syne.variable} ${outfit.variable} ${ibmPlexMono.variable} font-body`}>
         <SessionProvider>{children}</SessionProvider>
       </body>
