@@ -51,7 +51,7 @@ export function DocumentVerificationModal({
       <ModalContent>
         <div className="space-y-4">
           {/* Document Preview */}
-          <div className="bg-slate-100 rounded-lg min-h-[300px] flex items-center justify-center">
+          <div className="bg-void-800/50 border border-void-700/50 rounded-lg min-h-[300px] flex items-center justify-center">
             {document.mimeType.startsWith('image/') ? (
               <img
                 src={`/api/documents/${document.id}?preview=true`}
@@ -66,8 +66,8 @@ export function DocumentVerificationModal({
               />
             ) : (
               <div className="text-center p-8">
-                <FileIcon className="h-16 w-16 text-slate-400 mx-auto" />
-                <p className="mt-4 text-slate-600">Preview not available</p>
+                <FileIcon className="h-16 w-16 text-void-500 mx-auto" />
+                <p className="mt-4 text-void-400">Preview not available</p>
               </div>
             )}
           </div>
@@ -75,34 +75,34 @@ export function DocumentVerificationModal({
           {/* Document Details */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <dt className="text-slate-500">File Name</dt>
-              <dd className="font-medium text-slate-900">{document.originalName}</dd>
+              <dt className="text-void-400">File Name</dt>
+              <dd className="font-medium text-void-200">{document.originalName}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Category</dt>
-              <dd className="font-medium text-slate-900">
+              <dt className="text-void-400">Category</dt>
+              <dd className="font-medium text-void-200">
                 {formatDocumentType(document.category)}
               </dd>
             </div>
             <div>
-              <dt className="text-slate-500">Status</dt>
+              <dt className="text-void-400">Status</dt>
               <dd><DocumentStatusBadge status={document.status} /></dd>
             </div>
             <div>
-              <dt className="text-slate-500">Uploaded</dt>
-              <dd className="font-medium text-slate-900">
+              <dt className="text-void-400">Uploaded</dt>
+              <dd className="font-medium text-void-200">
                 {format(new Date(document.createdAt), 'PPpp')}
               </dd>
             </div>
             {document.verifiedBy && document.verifiedAt && (
               <>
                 <div>
-                  <dt className="text-slate-500">Verified By</dt>
-                  <dd className="font-medium text-slate-900">{document.verifiedBy.name}</dd>
+                  <dt className="text-void-400">Verified By</dt>
+                  <dd className="font-medium text-void-200">{document.verifiedBy.name}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Verified At</dt>
-                  <dd className="font-medium text-slate-900">
+                  <dt className="text-void-400">Verified At</dt>
+                  <dd className="font-medium text-void-200">
                     {format(new Date(document.verifiedAt), 'PPpp')}
                   </dd>
                 </div>
@@ -114,7 +114,7 @@ export function DocumentVerificationModal({
           <div>
             <label
               htmlFor="verification-notes"
-              className="block text-sm font-medium text-slate-700 mb-1"
+              className="block text-sm font-medium text-void-300 mb-1"
             >
               Verification Notes
             </label>
@@ -123,14 +123,14 @@ export function DocumentVerificationModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="block w-full rounded-md border border-void-700 bg-void-800 px-3 py-2 text-sm text-void-100 placeholder:text-void-500 focus:outline-none focus:ring-2 focus:ring-neon-500 focus:border-neon-500"
               placeholder="Add notes about this document (optional)"
               disabled={!isPending}
             />
           </div>
 
           {error && (
-            <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+            <div className="rounded-md bg-risk-500/10 border border-risk-500/30 p-3 text-sm text-risk-400">
               {error}
             </div>
           )}

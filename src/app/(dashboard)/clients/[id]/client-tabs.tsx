@@ -263,24 +263,24 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <dt className="text-sm font-medium text-slate-500">Phone</dt>
-                <dd className="mt-1 text-sm text-slate-900">{client.phone || '-'}</dd>
+                <dt className="text-sm font-medium text-void-400">Phone</dt>
+                <dd className="mt-1 text-sm text-void-200">{client.phone || '-'}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">Address</dt>
-                <dd className="mt-1 text-sm text-slate-900">{client.address || '-'}</dd>
+                <dt className="text-sm font-medium text-void-400">Address</dt>
+                <dd className="mt-1 text-sm text-void-200">{client.address || '-'}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">Notes</dt>
-                <dd className="mt-1 text-sm text-slate-900 whitespace-pre-wrap">{client.notes || '-'}</dd>
+                <dt className="text-sm font-medium text-void-400">Notes</dt>
+                <dd className="mt-1 text-sm text-void-200 whitespace-pre-wrap">{client.notes || '-'}</dd>
               </div>
-              <div className="pt-4 border-t border-slate-200">
-                <dt className="text-sm font-medium text-slate-500">Created</dt>
-                <dd className="mt-1 text-sm text-slate-900">{format(client.createdAt, 'PPpp')}</dd>
+              <div className="pt-4 border-t border-void-700/50">
+                <dt className="text-sm font-medium text-void-400">Created</dt>
+                <dd className="mt-1 text-sm text-void-200">{format(client.createdAt, 'PPpp')}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">Last Updated</dt>
-                <dd className="mt-1 text-sm text-slate-900">{format(client.updatedAt, 'PPpp')}</dd>
+                <dt className="text-sm font-medium text-void-400">Last Updated</dt>
+                <dd className="mt-1 text-sm text-void-200">{format(client.updatedAt, 'PPpp')}</dd>
               </div>
             </CardContent>
           </Card>
@@ -293,7 +293,7 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
         <div className="space-y-4">
           {/* Wallets Actions Bar */}
           <div className="flex items-center justify-between">
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-void-400">
               {client.wallets.length} wallet{client.wallets.length !== 1 ? 's' : ''}
             </div>
             <Button onClick={() => setShowAddWalletModal(true)}>
@@ -415,7 +415,7 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
                 options={STATUS_FILTER_OPTIONS}
                 className="w-40"
               />
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-void-400">
                 {filteredDocuments.length} of {client.documents.length} documents
               </div>
             </div>
@@ -466,15 +466,15 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
                       <TableCell>
                         {doc.verifiedBy ? (
                           <div className="text-sm">
-                            <div className="font-medium text-slate-900">{doc.verifiedBy.name}</div>
+                            <div className="font-medium text-void-200">{doc.verifiedBy.name}</div>
                             {doc.verifiedAt && (
-                              <div className="text-slate-500 text-xs">
+                              <div className="text-void-400 text-xs">
                                 {format(new Date(doc.verifiedAt), 'MMM d, yyyy')}
                               </div>
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <span className="text-void-500">-</span>
                         )}
                       </TableCell>
                       <TableCell>{format(doc.createdAt, 'MMM d, yyyy')}</TableCell>
@@ -547,24 +547,24 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-slate-900">{client.transactions.length}</div>
-                  <p className="text-sm text-slate-500">Total Transactions</p>
+                  <div className="text-2xl font-bold text-void-100">{client.transactions.length}</div>
+                  <p className="text-sm text-void-400">Total Transactions</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-slate-900">
+                  <div className="text-2xl font-bold text-void-100">
                     {new Set(client.transactions.map(t => t.asset)).size}
                   </div>
-                  <p className="text-sm text-slate-500">Unique Assets</p>
+                  <p className="text-sm text-void-400">Unique Assets</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-slate-900">
+                  <div className="text-2xl font-bold text-void-100">
                     {new Set(client.transactions.filter(t => t.exchange).map(t => t.exchange)).size || '-'}
                   </div>
-                  <p className="text-sm text-slate-500">Exchanges</p>
+                  <p className="text-sm text-void-400">Exchanges</p>
                 </CardContent>
               </Card>
             </div>
@@ -608,8 +608,8 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
                 </TableBody>
               </Table>
               {client.transactions.length > 10 && (
-                <div className="p-4 text-center border-t border-slate-200">
-                  <Link href={`/clients/${client.id}/transactions`} className="text-sm text-primary-600 hover:text-primary-700">
+                <div className="p-4 text-center border-t border-void-700/50">
+                  <Link href={`/clients/${client.id}/transactions`} className="text-sm text-neon-400 hover:text-neon-300">
                     View all {client.transactions.length} transactions with filters and sorting
                   </Link>
                 </div>
@@ -691,7 +691,7 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
       {previewDocument && (
         <>
           <ModalContent className="p-0">
-            <div className="bg-slate-100 min-h-[400px] flex items-center justify-center">
+            <div className="bg-void-800 min-h-[400px] flex items-center justify-center">
               {previewDocument.mimeType.startsWith('image/') ? (
                 <img
                   src={`/api/documents/${previewDocument.id}?preview=true`}
@@ -706,38 +706,38 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
                 />
               ) : (
                 <div className="text-center p-8">
-                  <FileIcon className="h-16 w-16 text-slate-400 mx-auto" />
-                  <p className="mt-4 text-slate-600">Preview not available</p>
+                  <FileIcon className="h-16 w-16 text-void-500 mx-auto" />
+                  <p className="mt-4 text-void-400">Preview not available</p>
                 </div>
               )}
             </div>
-            <div className="p-4 border-t border-slate-200">
+            <div className="p-4 border-t border-void-700/50">
               <dl className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <dt className="text-slate-500">Category</dt>
-                  <dd className="font-medium">{formatDocumentType(previewDocument.category)}</dd>
+                  <dt className="text-void-400">Category</dt>
+                  <dd className="font-medium text-void-200">{formatDocumentType(previewDocument.category)}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Status</dt>
+                  <dt className="text-void-400">Status</dt>
                   <dd><DocumentStatusBadge status={previewDocument.status} /></dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Size</dt>
-                  <dd className="font-medium">{formatFileSize(previewDocument.size)}</dd>
+                  <dt className="text-void-400">Size</dt>
+                  <dd className="font-medium text-void-200">{formatFileSize(previewDocument.size)}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Uploaded</dt>
-                  <dd className="font-medium">{format(previewDocument.createdAt, 'PPpp')}</dd>
+                  <dt className="text-void-400">Uploaded</dt>
+                  <dd className="font-medium text-void-200">{format(previewDocument.createdAt, 'PPpp')}</dd>
                 </div>
                 {previewDocument.verifiedBy && (
                   <>
                     <div>
-                      <dt className="text-slate-500">Verified By</dt>
-                      <dd className="font-medium">{previewDocument.verifiedBy.name}</dd>
+                      <dt className="text-void-400">Verified By</dt>
+                      <dd className="font-medium text-void-200">{previewDocument.verifiedBy.name}</dd>
                     </div>
                     <div>
-                      <dt className="text-slate-500">Verified At</dt>
-                      <dd className="font-medium">
+                      <dt className="text-void-400">Verified At</dt>
+                      <dd className="font-medium text-void-200">
                         {previewDocument.verifiedAt
                           ? format(new Date(previewDocument.verifiedAt), 'PPpp')
                           : '-'}
@@ -747,8 +747,8 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
                 )}
                 {previewDocument.notes && (
                   <div className="col-span-2">
-                    <dt className="text-slate-500">Notes</dt>
-                    <dd className="font-medium whitespace-pre-wrap">{previewDocument.notes}</dd>
+                    <dt className="text-void-400">Notes</dt>
+                    <dd className="font-medium text-void-200 whitespace-pre-wrap">{previewDocument.notes}</dd>
                   </div>
                 )}
               </dl>
@@ -784,7 +784,7 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
           <ModalContent>
             <div className="space-y-4">
               {/* Document Preview */}
-              <div className="bg-slate-100 rounded-lg min-h-[300px] flex items-center justify-center">
+              <div className="bg-void-800 rounded-lg min-h-[300px] flex items-center justify-center">
                 {verifyDocument.mimeType.startsWith('image/') ? (
                   <img
                     src={`/api/documents/${verifyDocument.id}?preview=true`}
@@ -799,8 +799,8 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
                   />
                 ) : (
                   <div className="text-center p-8">
-                    <FileIcon className="h-16 w-16 text-slate-400 mx-auto" />
-                    <p className="mt-4 text-slate-600">Preview not available</p>
+                    <FileIcon className="h-16 w-16 text-void-500 mx-auto" />
+                    <p className="mt-4 text-void-400">Preview not available</p>
                   </div>
                 )}
               </div>
@@ -808,24 +808,24 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
               {/* Document Details */}
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <dt className="text-slate-500">File Name</dt>
-                  <dd className="font-medium text-slate-900">{verifyDocument.originalName}</dd>
+                  <dt className="text-void-400">File Name</dt>
+                  <dd className="font-medium text-void-200">{verifyDocument.originalName}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Category</dt>
-                  <dd className="font-medium text-slate-900">
+                  <dt className="text-void-400">Category</dt>
+                  <dd className="font-medium text-void-200">
                     {formatDocumentType(verifyDocument.category)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Size</dt>
-                  <dd className="font-medium text-slate-900">
+                  <dt className="text-void-400">Size</dt>
+                  <dd className="font-medium text-void-200">
                     {formatFileSize(verifyDocument.size)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Uploaded</dt>
-                  <dd className="font-medium text-slate-900">
+                  <dt className="text-void-400">Uploaded</dt>
+                  <dd className="font-medium text-void-200">
                     {format(new Date(verifyDocument.createdAt), 'PPpp')}
                   </dd>
                 </div>
@@ -835,7 +835,7 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
               <div>
                 <label
                   htmlFor="verification-notes"
-                  className="block text-sm font-medium text-slate-700 mb-1"
+                  className="block text-sm font-medium text-void-300 mb-1"
                 >
                   Verification Notes
                 </label>
@@ -844,7 +844,7 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
                   value={verificationNotes}
                   onChange={(e) => setVerificationNotes(e.target.value)}
                   rows={3}
-                  className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="block w-full rounded-md border border-void-600 bg-void-900/80 px-3 py-2 text-sm text-void-100 placeholder:text-void-500 focus:outline-none focus:ring-2 focus:ring-neon-500/50 focus:border-neon-500/50"
                   placeholder="Add notes about this document (optional)"
                 />
               </div>
@@ -912,37 +912,37 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
           <ModalContent>
             <div className="space-y-4">
               {walletError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                  <p className="text-sm text-red-600">{walletError}</p>
+                <div className="p-3 bg-risk-500/10 border border-risk-500/30 rounded-md">
+                  <p className="text-sm text-risk-400">{walletError}</p>
                 </div>
               )}
 
               {/* Wallet Details */}
-              <div className="p-4 bg-slate-50 rounded-lg space-y-2">
+              <div className="p-4 bg-void-800/50 rounded-lg border border-void-700/50 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-500">Address</span>
-                  <span className="text-sm font-mono">{truncateAddress(verifyWalletModal.address)}</span>
+                  <span className="text-sm text-void-400">Address</span>
+                  <span className="text-sm font-mono text-void-200">{truncateAddress(verifyWalletModal.address)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-500">Blockchain</span>
+                  <span className="text-sm text-void-400">Blockchain</span>
                   <Badge>{formatBlockchain(verifyWalletModal.blockchain)}</Badge>
                 </div>
                 {verifyWalletModal.label && (
                   <div className="flex justify-between">
-                    <span className="text-sm text-slate-500">Label</span>
-                    <span className="text-sm">{verifyWalletModal.label}</span>
+                    <span className="text-sm text-void-400">Label</span>
+                    <span className="text-sm text-void-200">{verifyWalletModal.label}</span>
                   </div>
                 )}
               </div>
 
               {/* Proof Document Selection */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-void-300 mb-2">
                   Select Proof Document
                 </label>
                 {proofDocuments.length === 0 ? (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
-                    <p className="text-sm text-amber-700">
+                  <div className="p-4 bg-caution-500/10 border border-caution-500/30 rounded-md">
+                    <p className="text-sm text-caution-400">
                       No verified documents available. Please upload and verify a document first
                       (e.g., signed message, exchange statement showing address).
                     </p>
@@ -960,7 +960,7 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
                     ]}
                   />
                 )}
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-void-400">
                   Link a verified document that proves ownership of this wallet address
                   (e.g., signed message, exchange withdrawal confirmation, or wallet screenshot).
                 </p>
@@ -1005,35 +1005,35 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
           <ModalContent>
             <div className="space-y-4">
               {walletError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                  <p className="text-sm text-red-600">{walletError}</p>
+                <div className="p-3 bg-risk-500/10 border border-risk-500/30 rounded-md">
+                  <p className="text-sm text-risk-400">{walletError}</p>
                 </div>
               )}
 
-              <p className="text-slate-600">
+              <p className="text-void-300">
                 Are you sure you want to delete this wallet? This action cannot be undone.
               </p>
 
               {/* Wallet Details */}
-              <div className="p-4 bg-slate-50 rounded-lg space-y-2">
+              <div className="p-4 bg-void-800/50 rounded-lg border border-void-700/50 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-500">Address</span>
-                  <span className="text-sm font-mono">{truncateAddress(deleteWalletModal.address)}</span>
+                  <span className="text-sm text-void-400">Address</span>
+                  <span className="text-sm font-mono text-void-200">{truncateAddress(deleteWalletModal.address)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-500">Blockchain</span>
+                  <span className="text-sm text-void-400">Blockchain</span>
                   <Badge>{formatBlockchain(deleteWalletModal.blockchain)}</Badge>
                 </div>
                 {deleteWalletModal.label && (
                   <div className="flex justify-between">
-                    <span className="text-sm text-slate-500">Label</span>
-                    <span className="text-sm">{deleteWalletModal.label}</span>
+                    <span className="text-sm text-void-400">Label</span>
+                    <span className="text-sm text-void-200">{deleteWalletModal.label}</span>
                   </div>
                 )}
               </div>
 
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
-                <p className="text-sm text-amber-700">
+              <div className="p-3 bg-caution-500/10 border border-caution-500/30 rounded-md">
+                <p className="text-sm text-caution-400">
                   Any transactions linked to this wallet will no longer be associated with it.
                 </p>
               </div>
@@ -1068,10 +1068,10 @@ export function ClientTabs({ client, documentChecklist, exchangeConnections, doc
 // Helper components
 function EmptyState({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
   return (
-    <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
-      <div className="mx-auto h-12 w-12 text-slate-400">{icon}</div>
-      <h3 className="mt-4 text-lg font-medium text-slate-900">{title}</h3>
-      <p className="mt-2 text-sm text-slate-500">{description}</p>
+    <div className="text-center py-12 bg-void-900/60 rounded-lg border border-void-700/50">
+      <div className="mx-auto h-12 w-12 text-void-500">{icon}</div>
+      <h3 className="mt-4 text-lg font-medium text-void-100">{title}</h3>
+      <p className="mt-2 text-sm text-void-400">{description}</p>
     </div>
   )
 }
@@ -1268,8 +1268,8 @@ function FileIcon({ className }: { className?: string }) {
 function FileTypeIcon({ mimeType }: { mimeType: string }) {
   if (mimeType === 'application/pdf') {
     return (
-      <div className="w-8 h-8 flex items-center justify-center bg-red-100 rounded">
-        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="w-8 h-8 flex items-center justify-center bg-risk-500/20 rounded">
+        <svg className="w-5 h-5 text-risk-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
         </svg>
       </div>
@@ -1277,16 +1277,16 @@ function FileTypeIcon({ mimeType }: { mimeType: string }) {
   }
   if (mimeType.startsWith('image/')) {
     return (
-      <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded">
-        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="w-8 h-8 flex items-center justify-center bg-signal-500/20 rounded">
+        <svg className="w-5 h-5 text-signal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>
     )
   }
   return (
-    <div className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded">
-      <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="w-8 h-8 flex items-center justify-center bg-void-700 rounded">
+      <svg className="w-5 h-5 text-void-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     </div>

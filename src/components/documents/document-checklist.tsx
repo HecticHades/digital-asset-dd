@@ -39,7 +39,7 @@ export function DocumentChecklist({
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <div className="text-2xl font-bold text-slate-900">{completionPercentage}%</div>
+            <div className="text-2xl font-bold text-void-100">{completionPercentage}%</div>
             <CompletionRing percentage={completionPercentage} />
           </div>
         </div>
@@ -50,12 +50,12 @@ export function DocumentChecklist({
         ))}
 
         {missingDocuments.length > 0 && (
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="mt-4 p-3 bg-caution-500/10 border border-caution-500/30 rounded-lg">
             <div className="flex items-start gap-2">
-              <WarningIcon className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <WarningIcon className="w-5 h-5 text-caution-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-amber-800">Missing Required Documents</p>
-                <p className="text-sm text-amber-700 mt-1">
+                <p className="text-sm font-medium text-caution-400">Missing Required Documents</p>
+                <p className="text-sm text-caution-300 mt-1">
                   {missingDocuments.map(formatDocumentType).join(', ')}
                 </p>
               </div>
@@ -64,12 +64,12 @@ export function DocumentChecklist({
         )}
 
         {pendingDocuments.length > 0 && missingDocuments.length === 0 && (
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mt-4 p-3 bg-signal-500/10 border border-signal-500/30 rounded-lg">
             <div className="flex items-start gap-2">
-              <InfoIcon className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <InfoIcon className="w-5 h-5 text-signal-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-blue-800">Documents Pending Verification</p>
-                <p className="text-sm text-blue-700 mt-1">
+                <p className="text-sm font-medium text-signal-400">Documents Pending Verification</p>
+                <p className="text-sm text-signal-300 mt-1">
                   {pendingDocuments.map(formatDocumentType).join(', ')}
                 </p>
               </div>
@@ -78,12 +78,12 @@ export function DocumentChecklist({
         )}
 
         {completionPercentage === 100 && (
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mt-4 p-3 bg-profit-500/10 border border-profit-500/30 rounded-lg">
             <div className="flex items-start gap-2">
-              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <CheckCircleIcon className="w-5 h-5 text-profit-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-green-800">All Required Documents Verified</p>
-                <p className="text-sm text-green-700 mt-1">
+                <p className="text-sm font-medium text-profit-400">All Required Documents Verified</p>
+                <p className="text-sm text-profit-300 mt-1">
                   The client has provided and verified all required documentation.
                 </p>
               </div>
@@ -97,10 +97,10 @@ export function DocumentChecklist({
 
 function ChecklistItemRow({ item }: { item: DocumentChecklistItem }) {
   return (
-    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+    <div className="flex items-center justify-between p-3 bg-void-800/50 rounded-lg">
       <div className="flex items-center gap-3">
         <StatusIcon status={item.status} isUploaded={item.isUploaded} />
-        <span className="text-sm font-medium text-slate-900">
+        <span className="text-sm font-medium text-void-200">
           {formatDocumentType(item.category)}
         </span>
       </div>
@@ -111,15 +111,15 @@ function ChecklistItemRow({ item }: { item: DocumentChecklistItem }) {
 
 function StatusIcon({ status, isUploaded }: { status: DocumentStatus | null; isUploaded: boolean }) {
   if (!isUploaded) {
-    return <EmptyCircleIcon className="w-5 h-5 text-slate-300" />
+    return <EmptyCircleIcon className="w-5 h-5 text-void-500" />
   }
   if (status === 'VERIFIED') {
-    return <CheckCircleIcon className="w-5 h-5 text-green-500" />
+    return <CheckCircleIcon className="w-5 h-5 text-profit-400" />
   }
   if (status === 'REJECTED') {
-    return <XCircleIcon className="w-5 h-5 text-red-500" />
+    return <XCircleIcon className="w-5 h-5 text-risk-400" />
   }
-  return <ClockIcon className="w-5 h-5 text-amber-500" />
+  return <ClockIcon className="w-5 h-5 text-caution-400" />
 }
 
 function ChecklistStatusBadge({
@@ -154,7 +154,7 @@ function CompletionRing({ percentage }: { percentage: number }) {
         stroke="currentColor"
         strokeWidth="4"
         fill="none"
-        className="text-slate-200"
+        className="text-void-700"
       />
       <circle
         cx="22"
@@ -166,7 +166,7 @@ function CompletionRing({ percentage }: { percentage: number }) {
         strokeDasharray={circumference}
         strokeDashoffset={strokeDashoffset}
         strokeLinecap="round"
-        className={percentage === 100 ? 'text-green-500' : 'text-primary-500'}
+        className={percentage === 100 ? 'text-profit-400' : 'text-neon-400'}
       />
     </svg>
   )

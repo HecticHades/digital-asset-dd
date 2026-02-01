@@ -63,34 +63,34 @@ const SEVERITY_ORDER: FindingSeverity[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 
 function getSeverityColor(severity: string) {
   switch (severity) {
     case 'CRITICAL':
-      return 'bg-red-100 text-red-800 border-red-200'
+      return 'bg-risk-500/20 text-risk-400 border-risk-500/30'
     case 'HIGH':
-      return 'bg-orange-100 text-orange-800 border-orange-200'
+      return 'bg-orange-500/20 text-orange-400 border-orange-500/30'
     case 'MEDIUM':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      return 'bg-caution-500/20 text-caution-400 border-caution-500/30'
     case 'LOW':
-      return 'bg-blue-100 text-blue-800 border-blue-200'
+      return 'bg-signal-500/20 text-signal-400 border-signal-500/30'
     case 'INFO':
-      return 'bg-slate-100 text-slate-800 border-slate-200'
+      return 'bg-void-700 text-void-300 border-void-600'
     default:
-      return 'bg-slate-100 text-slate-800 border-slate-200'
+      return 'bg-void-700 text-void-300 border-void-600'
   }
 }
 
 function getSeverityBgColor(severity: string) {
   switch (severity) {
     case 'CRITICAL':
-      return 'bg-red-50 border-red-200'
+      return 'bg-risk-500/10 border-risk-500/30'
     case 'HIGH':
-      return 'bg-orange-50 border-orange-200'
+      return 'bg-orange-500/10 border-orange-500/30'
     case 'MEDIUM':
-      return 'bg-yellow-50 border-yellow-200'
+      return 'bg-caution-500/10 border-caution-500/30'
     case 'LOW':
-      return 'bg-blue-50 border-blue-200'
+      return 'bg-signal-500/10 border-signal-500/30'
     case 'INFO':
-      return 'bg-slate-50 border-slate-200'
+      return 'bg-void-800/50 border-void-700'
     default:
-      return 'bg-slate-50 border-slate-200'
+      return 'bg-void-800/50 border-void-700'
   }
 }
 
@@ -197,7 +197,7 @@ export function FindingsList({
     return (
       <div
         key={finding.id}
-        className={`border rounded-lg p-4 ${finding.isResolved ? 'bg-slate-50 border-slate-200' : getSeverityBgColor(finding.severity)}`}
+        className={`border rounded-lg p-4 ${finding.isResolved ? 'bg-void-800/30 border-void-700' : getSeverityBgColor(finding.severity)}`}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -206,7 +206,7 @@ export function FindingsList({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h4 className={`font-medium ${finding.isResolved ? 'text-slate-500' : 'text-slate-900'}`}>
+                <h4 className={`font-medium ${finding.isResolved ? 'text-void-400' : 'text-void-100'}`}>
                   {finding.title}
                 </h4>
                 <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getSeverityColor(finding.severity)}`}>
@@ -221,12 +221,12 @@ export function FindingsList({
               </div>
 
               {finding.description && (
-                <p className={`mt-1 text-sm ${finding.isResolved ? 'text-slate-400' : 'text-slate-600'}`}>
+                <p className={`mt-1 text-sm ${finding.isResolved ? 'text-void-500' : 'text-void-300'}`}>
                   {finding.description}
                 </p>
               )}
 
-              <div className="mt-2 flex items-center gap-4 text-xs text-slate-500">
+              <div className="mt-2 flex items-center gap-4 text-xs text-void-400">
                 <span>Created {format(new Date(finding.createdAt), 'MMM d, yyyy')}</span>
                 {finding.wallet && (
                   <span className="flex items-center gap-1">
@@ -251,7 +251,7 @@ export function FindingsList({
                 <div className="mt-2">
                   <button
                     onClick={() => setExpandedFinding(isExpanded ? null : finding.id)}
-                    className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                    className="text-xs text-neon-400 hover:text-neon-300 flex items-center gap-1"
                   >
                     {isExpanded ? 'Hide' : 'Show'} resolution details
                     <svg
@@ -264,9 +264,9 @@ export function FindingsList({
                     </svg>
                   </button>
                   {isExpanded && (
-                    <div className="mt-2 p-3 bg-white rounded-md border border-slate-200 text-sm">
-                      <p className="text-slate-600">{finding.resolution}</p>
-                      <div className="mt-2 text-xs text-slate-500">
+                    <div className="mt-2 p-3 bg-void-900/80 rounded-md border border-void-700 text-sm">
+                      <p className="text-void-300">{finding.resolution}</p>
+                      <div className="mt-2 text-xs text-void-500">
                         Resolved by {finding.resolvedBy?.name || 'Unknown'} on{' '}
                         {finding.resolvedAt ? format(new Date(finding.resolvedAt), 'MMM d, yyyy') : 'Unknown'}
                       </div>
@@ -331,7 +331,7 @@ export function FindingsList({
             </div>
           )}
           {openFindings.length === 0 && (
-            <span className="text-sm text-slate-500">No open findings</span>
+            <span className="text-sm text-void-400">No open findings</span>
           )}
         </div>
         <Button onClick={() => setShowAddModal(true)}>
@@ -350,7 +350,7 @@ export function FindingsList({
               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getSeverityColor(severity)}`}>
                 {SEVERITY_LABELS[severity as FindingSeverity]}
               </span>
-              <span className="text-slate-500 font-normal">
+              <span className="text-void-400 font-normal">
                 ({severityFindings.length} {severityFindings.length === 1 ? 'finding' : 'findings'})
               </span>
             </CardTitle>
@@ -363,9 +363,9 @@ export function FindingsList({
 
       {/* Empty State */}
       {openFindings.length === 0 && resolvedFindings.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
+        <div className="text-center py-12 bg-void-900/60 rounded-lg border border-void-700/50">
           <svg
-            className="mx-auto h-12 w-12 text-slate-400"
+            className="mx-auto h-12 w-12 text-void-500"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -377,8 +377,8 @@ export function FindingsList({
               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-slate-900">No findings yet</h3>
-          <p className="mt-2 text-sm text-slate-500">
+          <h3 className="mt-4 text-lg font-medium text-void-100">No findings yet</h3>
+          <p className="mt-2 text-sm text-void-400">
             Add a finding manually or run analysis to auto-generate flags.
           </p>
           <Button className="mt-4" onClick={() => setShowAddModal(true)}>
@@ -393,7 +393,7 @@ export function FindingsList({
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Badge variant="success">Resolved</Badge>
-              <span className="text-slate-500 font-normal">
+              <span className="text-void-400 font-normal">
                 ({resolvedFindings.length} {resolvedFindings.length === 1 ? 'finding' : 'findings'})
               </span>
             </CardTitle>

@@ -141,7 +141,7 @@ function getTimelineIcon(type: string) {
   switch (type) {
     case 'created':
       return (
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-signal-500/20 text-signal-400">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
@@ -149,7 +149,7 @@ function getTimelineIcon(type: string) {
       )
     case 'assigned':
       return (
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/20 text-purple-400">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
@@ -157,7 +157,7 @@ function getTimelineIcon(type: string) {
       )
     case 'approved':
       return (
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-profit-500/20 text-profit-400">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -165,7 +165,7 @@ function getTimelineIcon(type: string) {
       )
     case 'rejected':
       return (
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-600">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-risk-500/20 text-risk-400">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -173,7 +173,7 @@ function getTimelineIcon(type: string) {
       )
     default:
       return (
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-void-700 text-void-400">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -301,28 +301,28 @@ export function CaseTabs({
       {/* Status-based Action Banner */}
       {(canReview || canReopen || canComplete || caseData.status === 'REJECTED') && (
         <div className={`mb-6 rounded-lg p-4 ${
-          caseData.status === 'PENDING_REVIEW' ? 'bg-amber-50 border border-amber-200' :
-          caseData.status === 'REJECTED' ? 'bg-red-50 border border-red-200' :
-          caseData.status === 'APPROVED' ? 'bg-green-50 border border-green-200' :
-          'bg-slate-50 border border-slate-200'
+          caseData.status === 'PENDING_REVIEW' ? 'bg-caution-500/10 border border-caution-500/30' :
+          caseData.status === 'REJECTED' ? 'bg-risk-500/10 border border-risk-500/30' :
+          caseData.status === 'APPROVED' ? 'bg-profit-500/10 border border-profit-500/30' :
+          'bg-void-800/50 border border-void-700'
         }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {caseData.status === 'PENDING_REVIEW' && (
                 <>
-                  <ClockIcon className="h-5 w-5 text-amber-500" />
+                  <ClockIcon className="h-5 w-5 text-caution-400" />
                   <div>
-                    <p className="font-medium text-amber-800">Case Pending Review</p>
-                    <p className="text-sm text-amber-600">This case is awaiting compliance officer review.</p>
+                    <p className="font-medium text-caution-300">Case Pending Review</p>
+                    <p className="text-sm text-caution-400/80">This case is awaiting compliance officer review.</p>
                   </div>
                 </>
               )}
               {caseData.status === 'REJECTED' && (
                 <>
-                  <XCircleIcon className="h-5 w-5 text-red-500" />
+                  <XCircleIcon className="h-5 w-5 text-risk-400" />
                   <div>
-                    <p className="font-medium text-red-800">Case Rejected</p>
-                    <p className="text-sm text-red-600">
+                    <p className="font-medium text-risk-300">Case Rejected</p>
+                    <p className="text-sm text-risk-400/80">
                       {caseData.reviewNotes ? `Feedback: ${caseData.reviewNotes}` : 'Please address the feedback and resubmit.'}
                     </p>
                   </div>
@@ -330,10 +330,10 @@ export function CaseTabs({
               )}
               {caseData.status === 'APPROVED' && (
                 <>
-                  <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                  <CheckCircleIcon className="h-5 w-5 text-profit-400" />
                   <div>
-                    <p className="font-medium text-green-800">Case Approved</p>
-                    <p className="text-sm text-green-600">
+                    <p className="font-medium text-profit-300">Case Approved</p>
+                    <p className="text-sm text-profit-400/80">
                       {caseData.reviewedBy ? `Approved by ${caseData.reviewedBy.name}` : 'Ready to be marked as completed.'}
                     </p>
                   </div>
@@ -373,7 +373,7 @@ export function CaseTabs({
           </div>
 
           {actionError && (
-            <div className="mt-3 bg-red-100 text-red-700 px-3 py-2 rounded-md text-sm">
+            <div className="mt-3 bg-risk-500/10 border border-risk-500/30 text-risk-400 px-3 py-2 rounded-md text-sm">
               {actionError}
             </div>
           )}
@@ -417,22 +417,22 @@ export function CaseTabs({
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <dt className="text-sm font-medium text-slate-500">Description</dt>
-                <dd className="mt-1 text-sm text-slate-900 whitespace-pre-wrap">
+                <dt className="text-sm font-medium text-void-400">Description</dt>
+                <dd className="mt-1 text-sm text-void-200 whitespace-pre-wrap">
                   {caseData.description || 'No description provided'}
                 </dd>
               </div>
               {caseData.reviewNotes && (
                 <div>
-                  <dt className="text-sm font-medium text-slate-500">Review Notes</dt>
-                  <dd className="mt-1 text-sm text-slate-900 whitespace-pre-wrap">
+                  <dt className="text-sm font-medium text-void-400">Review Notes</dt>
+                  <dd className="mt-1 text-sm text-void-200 whitespace-pre-wrap">
                     {caseData.reviewNotes}
                   </dd>
                 </div>
               )}
-              <div className="pt-4 border-t border-slate-200">
-                <dt className="text-sm font-medium text-slate-500">Last Updated</dt>
-                <dd className="mt-1 text-sm text-slate-900">
+              <div className="pt-4 border-t border-void-700/50">
+                <dt className="text-sm font-medium text-void-400">Last Updated</dt>
+                <dd className="mt-1 text-sm text-void-200">
                   {format(new Date(caseData.updatedAt), 'PPpp')}
                 </dd>
               </div>
@@ -445,12 +445,12 @@ export function CaseTabs({
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <dt className="text-sm font-medium text-slate-500">Name</dt>
-                <dd className="mt-1 text-sm text-slate-900">{caseData.client.name}</dd>
+                <dt className="text-sm font-medium text-void-400">Name</dt>
+                <dd className="mt-1 text-sm text-void-200">{caseData.client.name}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">Email</dt>
-                <dd className="mt-1 text-sm text-slate-900">{caseData.client.email || '-'}</dd>
+                <dt className="text-sm font-medium text-void-400">Email</dt>
+                <dd className="mt-1 text-sm text-void-200">{caseData.client.email || '-'}</dd>
               </div>
             </CardContent>
           </Card>
@@ -496,13 +496,13 @@ export function CaseTabs({
             <CardContent>
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-slate-600 mb-2">
+                  <p className="text-sm text-void-300 mb-2">
                     Generate a comprehensive PDF due diligence report for this case.
                     The report includes all findings, risk assessment, client profile,
                     transaction analysis, and recommendations.
                   </p>
                   {caseData.reports.length > 0 && (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-void-400">
                       Generating a new report will create version {caseData.reports[0].version + 1}.
                     </p>
                   )}
@@ -526,7 +526,7 @@ export function CaseTabs({
                 </Button>
               </div>
               {reportError && (
-                <div className="mt-3 bg-red-50 text-red-700 px-3 py-2 rounded-md text-sm">
+                <div className="mt-3 bg-risk-500/10 border border-risk-500/30 text-risk-400 px-3 py-2 rounded-md text-sm">
                   {reportError}
                 </div>
               )}
@@ -535,9 +535,9 @@ export function CaseTabs({
 
           {/* Report History */}
           {caseData.reports.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
+            <div className="text-center py-12 bg-void-900/60 rounded-lg border border-void-700/50">
               <svg
-                className="mx-auto h-12 w-12 text-slate-400"
+                className="mx-auto h-12 w-12 text-void-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -549,16 +549,16 @@ export function CaseTabs({
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <h3 className="mt-4 text-lg font-medium text-slate-900">No reports generated yet</h3>
-              <p className="mt-2 text-sm text-slate-500">
+              <h3 className="mt-4 text-lg font-medium text-void-100">No reports generated yet</h3>
+              <p className="mt-2 text-sm text-void-400">
                 Click &quot;Generate Report&quot; to create your first report.
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg border border-slate-200">
-              <div className="px-4 py-3 border-b border-slate-200">
-                <h3 className="font-medium text-slate-900">Report History</h3>
-                <p className="text-sm text-slate-500">{caseData.reports.length} report(s) generated</p>
+            <div className="bg-void-900/60 rounded-lg border border-void-700/50">
+              <div className="px-4 py-3 border-b border-void-700/50">
+                <h3 className="font-medium text-void-100">Report History</h3>
+                <p className="text-sm text-void-400">{caseData.reports.length} report(s) generated</p>
               </div>
               <Table>
                 <TableHeader>
@@ -588,7 +588,7 @@ export function CaseTabs({
                           <Badge variant="default">Draft</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-slate-600">
+                      <TableCell className="text-sm text-void-300">
                         {report.generatedBy?.name || 'System'}
                       </TableCell>
                       <TableCell className="text-sm">{format(new Date(report.createdAt), 'MMM d, yyyy h:mm a')}</TableCell>
@@ -621,7 +621,7 @@ export function CaseTabs({
                     <div className="relative pb-8">
                       {eventIdx !== timeline.length - 1 && (
                         <span
-                          className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-slate-200"
+                          className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-void-700"
                           aria-hidden="true"
                         />
                       )}
@@ -629,10 +629,10 @@ export function CaseTabs({
                         {getTimelineIcon(event.type)}
                         <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
                           <div>
-                            <p className="text-sm font-medium text-slate-900">{event.title}</p>
-                            <p className="text-sm text-slate-500">{event.description}</p>
+                            <p className="text-sm font-medium text-void-100">{event.title}</p>
+                            <p className="text-sm text-void-400">{event.description}</p>
                           </div>
-                          <div className="whitespace-nowrap text-right text-sm text-slate-500">
+                          <div className="whitespace-nowrap text-right text-sm text-void-400">
                             {format(new Date(event.date), 'MMM d, yyyy')}
                           </div>
                         </div>

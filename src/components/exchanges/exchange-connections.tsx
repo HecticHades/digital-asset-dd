@@ -192,8 +192,8 @@ export function ExchangeConnections({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium text-slate-900">Exchange Connections</h3>
-          <p className="text-sm text-slate-500">
+          <h3 className="text-lg font-medium text-void-100">Exchange Connections</h3>
+          <p className="text-sm text-void-400">
             Connect exchange APIs to automatically import trading history
           </p>
         </div>
@@ -207,9 +207,9 @@ export function ExchangeConnections({
       {connections.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <ExchangeIcon className="mx-auto h-12 w-12 text-slate-400" />
-            <h3 className="mt-4 text-lg font-medium text-slate-900">No exchange connections</h3>
-            <p className="mt-2 text-sm text-slate-500">
+            <ExchangeIcon className="mx-auto h-12 w-12 text-void-500" />
+            <h3 className="mt-4 text-lg font-medium text-void-200">No exchange connections</h3>
+            <p className="mt-2 text-sm text-void-400">
               Connect your first exchange to import trading history automatically.
             </p>
             <Button className="mt-4" onClick={() => setShowAddModal(true)}>
@@ -252,23 +252,23 @@ export function ExchangeConnections({
                 <CardContent>
                   <dl className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <dt className="text-slate-500">API Key</dt>
-                      <dd className="font-mono text-slate-900">{connection.maskedApiKey}</dd>
+                      <dt className="text-void-400">API Key</dt>
+                      <dd className="font-mono text-void-200">{connection.maskedApiKey}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-slate-500">Last Sync</dt>
-                      <dd className="text-slate-900">
+                      <dt className="text-void-400">Last Sync</dt>
+                      <dd className="text-void-200">
                         {connection.lastSyncAt
                           ? format(new Date(connection.lastSyncAt), 'MMM d, yyyy HH:mm')
                           : 'Never'}
                       </dd>
                     </div>
                     {connection.lastSyncStatus && (
-                      <div className="pt-2 border-t border-slate-100">
+                      <div className="pt-2 border-t border-void-700/50">
                         <p className={`text-xs ${
                           connection.lastSyncStatus.startsWith('Success')
-                            ? 'text-green-600'
-                            : 'text-red-600'
+                            ? 'text-profit-400'
+                            : 'text-risk-400'
                         }`}>
                           {connection.lastSyncStatus}
                         </p>
@@ -279,7 +279,7 @@ export function ExchangeConnections({
                   {/* Sync Result */}
                   {result && (
                     <div className={`mt-3 p-2 rounded text-xs ${
-                      result.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                      result.success ? 'bg-profit-500/10 text-profit-400' : 'bg-risk-500/10 text-risk-400'
                     }`}>
                       {result.message}
                     </div>
@@ -337,14 +337,14 @@ export function ExchangeConnections({
         <ModalContent>
           <div className="space-y-4">
             {addError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600">{addError}</p>
+              <div className="p-3 bg-risk-500/10 border border-risk-500/30 rounded-md">
+                <p className="text-sm text-risk-400">{addError}</p>
               </div>
             )}
 
             {/* Exchange Selection */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-void-300 mb-1">
                 Exchange
               </label>
               <Select
@@ -358,7 +358,7 @@ export function ExchangeConnections({
                 )}
                 disabled={addLoading}
               />
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-void-400">
                 {EXCHANGE_DISPLAY_INFO[addFormData.exchange].description}
               </p>
             </div>
@@ -401,22 +401,22 @@ export function ExchangeConnections({
             {testResult.tested && (
               <div className={`p-3 rounded-md ${
                 testResult.success
-                  ? 'bg-green-50 border border-green-200'
-                  : 'bg-red-50 border border-red-200'
+                  ? 'bg-profit-500/10 border border-profit-500/30'
+                  : 'bg-risk-500/10 border border-risk-500/30'
               }`}>
                 {testResult.success ? (
                   <div>
-                    <p className="text-sm font-medium text-green-700">
+                    <p className="text-sm font-medium text-profit-400">
                       ✓ Credentials validated successfully
                     </p>
                     {testResult.permissions && (
-                      <div className="mt-2 text-xs text-green-600">
+                      <div className="mt-2 text-xs text-profit-300">
                         <p>Permissions: Read{testResult.permissions.canTrade ? ', Trade' : ''}{testResult.permissions.canWithdraw ? ', Withdraw' : ''}</p>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-red-600">
+                  <p className="text-sm text-risk-400">
                     ✗ {testResult.error || 'Validation failed'}
                   </p>
                 )}
@@ -424,16 +424,16 @@ export function ExchangeConnections({
             )}
 
             {/* Security Notice */}
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
-              <p className="text-xs text-slate-600">
-                <strong>Security:</strong> API keys are encrypted before storage using AES-256-GCM.
+            <div className="p-3 bg-void-800/50 border border-void-700/50 rounded-md">
+              <p className="text-xs text-void-300">
+                <strong className="text-void-200">Security:</strong> API keys are encrypted before storage using AES-256-GCM.
                 We recommend using read-only API keys for maximum security.
               </p>
               <a
                 href={EXCHANGE_DISPLAY_INFO[addFormData.exchange].docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-primary-600 hover:text-primary-700 mt-1 inline-block"
+                className="text-xs text-neon-400 hover:text-neon-300 mt-1 inline-block"
               >
                 Learn how to create API keys →
               </a>
@@ -494,9 +494,9 @@ export function ExchangeConnections({
           <>
             <ModalContent>
               <div className="space-y-4">
-                <p className="text-slate-600">
+                <p className="text-void-300">
                   Are you sure you want to remove the{' '}
-                  <strong>{EXCHANGE_DISPLAY_INFO[removeConnection.exchange].displayName}</strong>{' '}
+                  <strong className="text-void-100">{EXCHANGE_DISPLAY_INFO[removeConnection.exchange].displayName}</strong>{' '}
                   connection? This will not delete any imported transactions.
                 </p>
               </div>

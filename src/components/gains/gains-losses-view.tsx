@@ -164,7 +164,7 @@ export function GainsLossesView({ clientId }: GainsLossesViewProps) {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            <span className="ml-3 text-slate-600">Calculating gains and losses...</span>
+            <span className="ml-3 text-void-400">Calculating gains and losses...</span>
           </div>
         </CardContent>
       </Card>
@@ -175,9 +175,9 @@ export function GainsLossesView({ clientId }: GainsLossesViewProps) {
     return (
       <Card>
         <CardContent className="p-8">
-          <div className="text-center text-red-600">
+          <div className="text-center text-risk-400">
             <p className="font-medium">Error calculating gains/losses</p>
-            <p className="text-sm mt-1">{error}</p>
+            <p className="text-sm mt-1 text-risk-300">{error}</p>
             <Button onClick={fetchGainsLosses} className="mt-4">
               Try Again
             </Button>
@@ -216,7 +216,7 @@ export function GainsLossesView({ clientId }: GainsLossesViewProps) {
               Export CSV
             </Button>
           </div>
-          <p className="text-xs text-slate-500 mt-2">
+          <p className="text-xs text-void-400 mt-2">
             {COST_BASIS_METHODS[method].description}
           </p>
         </CardContent>
@@ -228,7 +228,7 @@ export function GainsLossesView({ clientId }: GainsLossesViewProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-slate-500">Net Realized Gain/Loss</p>
+                <p className="text-sm text-void-400">Net Realized Gain/Loss</p>
                 <p className="text-2xl font-bold">
                   <GainLossDisplay value={result.summary.netRealizedGainLoss} />
                 </p>
@@ -236,29 +236,29 @@ export function GainsLossesView({ clientId }: GainsLossesViewProps) {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-slate-500">Short-Term Gain/Loss</p>
+                <p className="text-sm text-void-400">Short-Term Gain/Loss</p>
                 <p className="text-xl font-semibold">
                   <GainLossDisplay value={result.summary.shortTermGainLoss} />
                 </p>
-                <p className="text-xs text-slate-400 mt-1">Held &lt; 1 year</p>
+                <p className="text-xs text-void-500 mt-1">Held &lt; 1 year</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-slate-500">Long-Term Gain/Loss</p>
+                <p className="text-sm text-void-400">Long-Term Gain/Loss</p>
                 <p className="text-xl font-semibold">
                   <GainLossDisplay value={result.summary.longTermGainLoss} />
                 </p>
-                <p className="text-xs text-slate-400 mt-1">Held &gt; 1 year</p>
+                <p className="text-xs text-void-500 mt-1">Held &gt; 1 year</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-slate-500">Total Proceeds</p>
-                <p className="text-xl font-semibold">
+                <p className="text-sm text-void-400">Total Proceeds</p>
+                <p className="text-xl font-semibold text-void-100">
                   {formatCurrency(result.summary.totalProceeds)}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-void-500 mt-1">
                   {result.disposalEvents.length} disposals
                 </p>
               </CardContent>
@@ -268,15 +268,15 @@ export function GainsLossesView({ clientId }: GainsLossesViewProps) {
           {/* Tabs */}
           <Card>
             <CardHeader>
-              <div className="flex gap-2 border-b pb-2">
+              <div className="flex gap-2 border-b border-void-700/50 pb-2">
                 {(['summary', 'disposals', 'holdings', 'assets'] as ViewTab[]).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={`px-4 py-2 text-sm font-medium rounded-t ${
                       activeTab === tab
-                        ? 'bg-primary-100 text-primary-700 border-b-2 border-primary-600'
-                        : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
+                        ? 'bg-neon-500/10 text-neon-400 border-b-2 border-neon-500'
+                        : 'text-void-400 hover:text-void-200 hover:bg-void-800'
                     }`}
                   >
                     {tab === 'summary' && 'Summary'}
@@ -331,30 +331,30 @@ function SummaryTab({
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <h4 className="text-sm font-medium text-slate-500 mb-2">Proceeds & Cost Basis</h4>
+          <h4 className="text-sm font-medium text-void-400 mb-2">Proceeds & Cost Basis</h4>
           <dl className="space-y-1">
             <div className="flex justify-between">
-              <dt className="text-slate-600">Total Proceeds</dt>
-              <dd className="font-medium">{formatCurrency(result.summary.totalProceeds)}</dd>
+              <dt className="text-void-300">Total Proceeds</dt>
+              <dd className="font-medium text-void-100">{formatCurrency(result.summary.totalProceeds)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-600">Total Cost Basis</dt>
-              <dd className="font-medium">{formatCurrency(result.summary.totalCostBasis)}</dd>
+              <dt className="text-void-300">Total Cost Basis</dt>
+              <dd className="font-medium text-void-100">{formatCurrency(result.summary.totalCostBasis)}</dd>
             </div>
           </dl>
         </div>
         <div>
-          <h4 className="text-sm font-medium text-slate-500 mb-2">Gains & Losses</h4>
+          <h4 className="text-sm font-medium text-void-400 mb-2">Gains & Losses</h4>
           <dl className="space-y-1">
             <div className="flex justify-between">
-              <dt className="text-slate-600">Total Gains</dt>
-              <dd className="font-medium text-green-600">
+              <dt className="text-void-300">Total Gains</dt>
+              <dd className="font-medium text-profit-400">
                 {formatCurrency(result.summary.totalRealizedGain)}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-600">Total Losses</dt>
-              <dd className="font-medium text-red-600">
+              <dt className="text-void-300">Total Losses</dt>
+              <dd className="font-medium text-risk-400">
                 ({formatCurrency(result.summary.totalRealizedLoss)})
               </dd>
             </div>
@@ -363,19 +363,19 @@ function SummaryTab({
       </div>
 
       <div>
-        <h4 className="text-sm font-medium text-slate-500 mb-2">Calculation Period</h4>
-        <p className="text-slate-600">
+        <h4 className="text-sm font-medium text-void-400 mb-2">Calculation Period</h4>
+        <p className="text-void-300">
           {format(result.period.start, 'MMM d, yyyy')} - {format(result.period.end, 'MMM d, yyyy')}
         </p>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-void-400 mt-1">
           Method: {COST_BASIS_METHODS[result.method].label}
         </p>
       </div>
 
       {result.currentHoldings.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-slate-500 mb-2">Current Holdings Summary</h4>
-          <p className="text-slate-600">
+          <h4 className="text-sm font-medium text-void-400 mb-2">Current Holdings Summary</h4>
+          <p className="text-void-300">
             {result.currentHoldings.length} assets with total cost basis of{' '}
             {formatCurrency(result.currentHoldings.reduce((sum, h) => sum + h.totalCostBasis, 0))}
           </p>
@@ -397,7 +397,7 @@ function DisposalsTab({
 }) {
   if (disposals.length === 0) {
     return (
-      <div className="text-center py-8 text-slate-500">
+      <div className="text-center py-8 text-void-400">
         No disposals in the selected period
       </div>
     )
@@ -468,7 +468,7 @@ function HoldingsTab({
 }) {
   if (holdings.length === 0) {
     return (
-      <div className="text-center py-8 text-slate-500">
+      <div className="text-center py-8 text-void-400">
         No current holdings
       </div>
     )
@@ -526,7 +526,7 @@ function AssetsTab({
 }) {
   if (assets.length === 0) {
     return (
-      <div className="text-center py-8 text-slate-500">
+      <div className="text-center py-8 text-void-400">
         No assets traded in the selected period
       </div>
     )
@@ -564,12 +564,12 @@ function AssetsTab({
                   {formatCurrency(asset.netRealizedGainLoss)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <span className={asset.shortTermGain - asset.shortTermLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  <span className={asset.shortTermGain - asset.shortTermLoss >= 0 ? 'text-profit-400' : 'text-risk-400'}>
                     {formatCurrency(asset.shortTermGain - asset.shortTermLoss)}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <span className={asset.longTermGain - asset.longTermLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  <span className={asset.longTermGain - asset.longTermLoss >= 0 ? 'text-profit-400' : 'text-risk-400'}>
                     {formatCurrency(asset.longTermGain - asset.longTermLoss)}
                   </span>
                 </TableCell>

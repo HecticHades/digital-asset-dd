@@ -206,9 +206,9 @@ export function ComplianceChecklist({
   // Empty state - no checklist items
   if (items.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
+      <div className="text-center py-12 bg-void-900/60 rounded-lg border border-void-700/50">
         <svg
-          className="mx-auto h-12 w-12 text-slate-400"
+          className="mx-auto h-12 w-12 text-void-500"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -220,8 +220,8 @@ export function ComplianceChecklist({
             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
           />
         </svg>
-        <h3 className="mt-4 text-lg font-medium text-slate-900">No checklist items</h3>
-        <p className="mt-2 text-sm text-slate-500">
+        <h3 className="mt-4 text-lg font-medium text-void-100">No checklist items</h3>
+        <p className="mt-2 text-sm text-void-400">
           Initialize the compliance checklist to get started.
         </p>
         {canEdit && (
@@ -252,12 +252,12 @@ export function ComplianceChecklist({
             {/* Progress bar */}
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-slate-600">Overall Progress</span>
-                <span className="font-medium">{completionStatus.percentage}%</span>
+                <span className="text-void-300">Overall Progress</span>
+                <span className="font-medium text-void-200">{completionStatus.percentage}%</span>
               </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-void-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary-600 rounded-full transition-all duration-300"
+                  className="h-full bg-neon-500 rounded-full transition-all duration-300"
                   style={{ width: `${completionStatus.percentage}%` }}
                 />
               </div>
@@ -266,15 +266,15 @@ export function ComplianceChecklist({
             {/* Required items progress */}
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-slate-600">Required Items</span>
-                <span className="font-medium">
+                <span className="text-void-300">Required Items</span>
+                <span className="font-medium text-void-200">
                   {completionStatus.requiredCompleted} / {completionStatus.required}
                 </span>
               </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-void-800 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${
-                    completionStatus.isComplete ? 'bg-green-500' : 'bg-amber-500'
+                    completionStatus.isComplete ? 'bg-profit-500' : 'bg-caution-500'
                   }`}
                   style={{ width: `${completionStatus.requiredPercentage}%` }}
                 />
@@ -283,12 +283,12 @@ export function ComplianceChecklist({
 
             {/* Missing required items */}
             {completionStatus.missingRequired.length > 0 && (
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-sm font-medium text-amber-800 mb-2">Missing Required Items:</p>
-                <ul className="text-sm text-amber-700 space-y-1">
+              <div className="mt-4 p-3 bg-caution-500/10 border border-caution-500/30 rounded-lg">
+                <p className="text-sm font-medium text-caution-300 mb-2">Missing Required Items:</p>
+                <ul className="text-sm text-caution-400 space-y-1">
                   {completionStatus.missingRequired.map((item, idx) => (
                     <li key={idx} className="flex items-center gap-2">
-                      <span className="w-1 h-1 bg-amber-500 rounded-full" />
+                      <span className="w-1 h-1 bg-caution-500 rounded-full" />
                       {item}
                     </li>
                   ))}
@@ -298,9 +298,9 @@ export function ComplianceChecklist({
 
             {/* Submit for review button */}
             {caseStatus === 'IN_PROGRESS' && (
-              <div className="pt-4 border-t border-slate-200">
+              <div className="pt-4 border-t border-void-700/50">
                 {submitError && (
-                  <p className="text-sm text-red-600 mb-3">{submitError}</p>
+                  <p className="text-sm text-risk-400 mb-3">{submitError}</p>
                 )}
                 <Button
                   className="w-full"
@@ -310,7 +310,7 @@ export function ComplianceChecklist({
                   {isSubmitting ? 'Submitting...' : 'Submit for Review'}
                 </Button>
                 {!completionStatus.isComplete && (
-                  <p className="text-xs text-slate-500 mt-2 text-center">
+                  <p className="text-xs text-void-400 mt-2 text-center">
                     Complete all required items before submitting
                   </p>
                 )}
@@ -336,7 +336,7 @@ export function ComplianceChecklist({
         <CardContent>
           {/* Add item form */}
           {showAddForm && (
-            <form onSubmit={handleAddItem} className="mb-6 p-4 bg-slate-50 rounded-lg">
+            <form onSubmit={handleAddItem} className="mb-6 p-4 bg-void-800/50 rounded-lg border border-void-700/50">
               <div className="space-y-3">
                 <Input
                   label="Title"
@@ -356,9 +356,9 @@ export function ComplianceChecklist({
                     type="checkbox"
                     checked={newItem.isRequired}
                     onChange={(e) => setNewItem({ ...newItem, isRequired: e.target.checked })}
-                    className="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                    className="rounded border-void-600 bg-void-900 text-neon-500 focus:ring-neon-500/50"
                   />
-                  <span className="text-slate-700">Required for submission</span>
+                  <span className="text-void-300">Required for submission</span>
                 </label>
                 <div className="flex gap-2 pt-2">
                   <Button type="submit" size="sm" disabled={isAddingItem}>
@@ -383,7 +383,7 @@ export function ComplianceChecklist({
               <li
                 key={item.id}
                 className={`border rounded-lg transition-colors ${
-                  item.isCompleted ? 'border-green-200 bg-green-50/50' : 'border-slate-200 bg-white'
+                  item.isCompleted ? 'border-profit-500/30 bg-profit-500/10' : 'border-void-700 bg-void-800/50'
                 }`}
               >
                 <div className="p-4">
@@ -393,11 +393,11 @@ export function ComplianceChecklist({
                       onClick={() => handleToggleComplete(item)}
                       disabled={!canEdit || processingItemId === item.id}
                       className={`flex-shrink-0 mt-0.5 ${
-                        item.isCompleted ? 'text-green-600' : 'text-slate-300 hover:text-slate-400'
+                        item.isCompleted ? 'text-profit-400' : 'text-void-500 hover:text-void-400'
                       } ${!canEdit ? 'cursor-default' : 'cursor-pointer'}`}
                     >
                       {processingItemId === item.id ? (
-                        <div className="h-5 w-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                        <div className="h-5 w-5 border-2 border-neon-500 border-t-transparent rounded-full animate-spin" />
                       ) : item.isCompleted ? (
                         <CheckCircleIcon className="h-5 w-5" />
                       ) : (
@@ -410,7 +410,7 @@ export function ComplianceChecklist({
                       <div className="flex items-center gap-2 flex-wrap">
                         <span
                           className={`font-medium ${
-                            item.isCompleted ? 'text-slate-500 line-through' : 'text-slate-900'
+                            item.isCompleted ? 'text-void-400 line-through' : 'text-void-100'
                           }`}
                         >
                           {item.title}
@@ -418,16 +418,16 @@ export function ComplianceChecklist({
                         {item.isRequired && <Badge variant="default">Required</Badge>}
                       </div>
                       {item.description && (
-                        <p className="mt-1 text-sm text-slate-500">{item.description}</p>
+                        <p className="mt-1 text-sm text-void-400">{item.description}</p>
                       )}
                       {item.isCompleted && item.completedAt && (
-                        <p className="mt-2 text-xs text-slate-400">
+                        <p className="mt-2 text-xs text-void-500">
                           Completed {format(new Date(item.completedAt), 'MMM d, yyyy \'at\' h:mm a')}
                           {item.completedBy && ` by ${item.completedBy.name}`}
                         </p>
                       )}
                       {item.notes && (
-                        <p className="mt-2 text-sm text-slate-600 bg-slate-100 p-2 rounded">
+                        <p className="mt-2 text-sm text-void-300 bg-void-900/80 p-2 rounded border border-void-700/50">
                           <span className="font-medium">Notes: </span>
                           {item.notes}
                         </p>
@@ -455,7 +455,7 @@ export function ComplianceChecklist({
                           onClick={() =>
                             setExpandedItemId(expandedItemId === item.id ? null : item.id)
                           }
-                          className="text-xs text-slate-500 hover:text-slate-700"
+                          className="text-xs text-void-400 hover:text-neon-400"
                         >
                           {expandedItemId === item.id ? 'Hide' : 'Add Notes'}
                         </button>
@@ -464,7 +464,7 @@ export function ComplianceChecklist({
                         <button
                           onClick={() => handleDeleteItem(item.id)}
                           disabled={processingItemId === item.id}
-                          className="text-slate-400 hover:text-red-600 p-1"
+                          className="text-void-500 hover:text-risk-400 p-1"
                           title="Delete item"
                         >
                           <TrashIcon className="h-4 w-4" />

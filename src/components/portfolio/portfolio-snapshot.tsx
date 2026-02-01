@@ -245,7 +245,7 @@ export function PortfolioSnapshot({ clientId }: PortfolioSnapshotProps) {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            <span className="ml-3 text-slate-600">Loading portfolio...</span>
+            <span className="ml-3 text-void-400">Loading portfolio...</span>
           </div>
         </CardContent>
       </Card>
@@ -256,7 +256,7 @@ export function PortfolioSnapshot({ clientId }: PortfolioSnapshotProps) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <p className="text-red-600 mb-4">{error}</p>
+          <p className="text-risk-400 mb-4">{error}</p>
           <Button onClick={fetchPortfolio}>Try Again</Button>
         </CardContent>
       </Card>
@@ -266,7 +266,7 @@ export function PortfolioSnapshot({ clientId }: PortfolioSnapshotProps) {
   if (!portfolioData || aggregatedHoldings.length === 0) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-slate-500">
+        <CardContent className="p-8 text-center text-void-400">
           No holdings found. Import transactions from CEX or on-chain sources to see portfolio data.
         </CardContent>
       </Card>
@@ -282,23 +282,23 @@ export function PortfolioSnapshot({ clientId }: PortfolioSnapshotProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-slate-500">Total Assets</p>
-            <p className="text-2xl font-bold">{aggregatedHoldings.length}</p>
-            <p className="text-xs text-slate-400 mt-1">unique assets</p>
+            <p className="text-sm text-void-400">Total Assets</p>
+            <p className="text-2xl font-bold text-void-100">{aggregatedHoldings.length}</p>
+            <p className="text-xs text-void-500 mt-1">unique assets</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-slate-500">Total Cost Basis</p>
-            <p className="text-2xl font-bold">{formatCurrency(totalPortfolioCostBasis)}</p>
-            <p className="text-xs text-slate-400 mt-1">amount invested</p>
+            <p className="text-sm text-void-400">Total Cost Basis</p>
+            <p className="text-2xl font-bold text-void-100">{formatCurrency(totalPortfolioCostBasis)}</p>
+            <p className="text-xs text-void-500 mt-1">amount invested</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-slate-500">Exchanges</p>
-            <p className="text-2xl font-bold">{exchangeBreakdown.length}</p>
-            <p className="text-xs text-slate-400 mt-1">connected sources</p>
+            <p className="text-sm text-void-400">Exchanges</p>
+            <p className="text-2xl font-bold text-void-100">{exchangeBreakdown.length}</p>
+            <p className="text-xs text-void-500 mt-1">connected sources</p>
           </CardContent>
         </Card>
       </div>
@@ -329,24 +329,24 @@ export function PortfolioSnapshot({ clientId }: PortfolioSnapshotProps) {
               ]
               return (
                 <div key={holding.asset} className="flex items-center gap-3">
-                  <div className="w-16 font-medium">{holding.asset}</div>
-                  <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-16 font-medium text-void-200">{holding.asset}</div>
+                  <div className="flex-1 h-6 bg-void-800 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${colors[index % colors.length]} transition-all`}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
                   <div className="w-24 text-right text-sm">
-                    <span className="font-medium">{percentage.toFixed(1)}%</span>
+                    <span className="font-medium text-void-200">{percentage.toFixed(1)}%</span>
                   </div>
-                  <div className="w-32 text-right text-sm text-slate-500">
+                  <div className="w-32 text-right text-sm text-void-400">
                     {formatCurrency(holding.totalCostBasis)}
                   </div>
                 </div>
               )
             })}
             {aggregatedHoldings.length > 10 && (
-              <p className="text-sm text-slate-500 text-center pt-2">
+              <p className="text-sm text-void-400 text-center pt-2">
                 + {aggregatedHoldings.length - 10} more assets
               </p>
             )}
@@ -413,20 +413,20 @@ export function PortfolioSnapshot({ clientId }: PortfolioSnapshotProps) {
             {exchangeBreakdown.map((exchange) => (
               <div
                 key={exchange.exchange}
-                className="border border-slate-200 rounded-lg p-4"
+                className="border border-void-700/50 rounded-lg p-4 bg-void-800/50"
               >
-                <h4 className="font-medium text-slate-900 mb-3">
+                <h4 className="font-medium text-void-100 mb-3">
                   {exchange.exchange}
                 </h4>
                 <div className="space-y-2">
                   {exchange.holdings.slice(0, 5).map((h) => (
                     <div key={h.asset} className="flex justify-between text-sm">
-                      <span className="text-slate-600">{h.asset}</span>
-                      <span className="font-mono">{formatAmount(h.amount)}</span>
+                      <span className="text-void-300">{h.asset}</span>
+                      <span className="font-mono text-void-200">{formatAmount(h.amount)}</span>
                     </div>
                   ))}
                   {exchange.holdings.length > 5 && (
-                    <p className="text-xs text-slate-400 pt-1">
+                    <p className="text-xs text-void-500 pt-1">
                       + {exchange.holdings.length - 5} more
                     </p>
                   )}
@@ -464,14 +464,14 @@ export function PortfolioSnapshot({ clientId }: PortfolioSnapshotProps) {
 
           {historicalSnapshot && (
             <div className="mt-4">
-              <div className="mb-4 p-4 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-600">
+              <div className="mb-4 p-4 bg-void-800/50 rounded-lg border border-void-700/50">
+                <p className="text-sm text-void-300">
                   Snapshot as of {format(historicalSnapshot.date, 'MMMM d, yyyy')}
                 </p>
-                <p className="text-lg font-medium mt-1">
+                <p className="text-lg font-medium mt-1 text-void-100">
                   Cost Basis: {formatCurrency(historicalSnapshot.totalCostBasis)}
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-void-400">
                   {historicalSnapshot.holdings.length} assets held
                 </p>
               </div>
@@ -506,16 +506,16 @@ export function PortfolioSnapshot({ clientId }: PortfolioSnapshotProps) {
       </Card>
 
       {/* Net Worth Summary */}
-      <Card className="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
+      <Card className="bg-gradient-to-r from-neon-500/10 to-neon-500/5 border-neon-500/30">
         <CardHeader>
-          <CardTitle>Client Net Worth (Digital Assets)</CardTitle>
+          <CardTitle className="text-neon-300">Client Net Worth (Digital Assets)</CardTitle>
           <CardDescription>Total digital asset holdings based on cost basis</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-primary-700">
+          <div className="text-3xl font-bold text-neon-400">
             {formatCurrency(totalPortfolioCostBasis)}
           </div>
-          <p className="text-sm text-primary-600 mt-2">
+          <p className="text-sm text-neon-300/80 mt-2">
             Based on acquisition cost across {aggregatedHoldings.length} assets
             from {exchangeBreakdown.length} exchange(s)
           </p>

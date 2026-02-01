@@ -25,7 +25,7 @@ export function RiskBreakdown({ breakdown }: RiskBreakdownProps) {
           <span>Risk Assessment</span>
           <div className={`flex items-center gap-2 ${getRiskScoreColor(breakdown.overallScore)}`}>
             <span className="text-2xl font-bold">{breakdown.overallScore}</span>
-            <span className="text-sm font-normal text-slate-500">/ 100</span>
+            <span className="text-sm font-normal text-void-400">/ 100</span>
           </div>
         </CardTitle>
       </CardHeader>
@@ -33,18 +33,18 @@ export function RiskBreakdown({ breakdown }: RiskBreakdownProps) {
         {/* Overall Score Gauge */}
         <div className="mb-6">
           <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-slate-600">Overall Risk Score</span>
+            <span className="text-void-300">Overall Risk Score</span>
             <span className={`font-medium ${getRiskScoreColor(breakdown.overallScore)}`}>
               {breakdown.riskLevel}
             </span>
           </div>
-          <div className="h-4 bg-slate-100 rounded-full overflow-hidden">
+          <div className="h-4 bg-void-800 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${getRiskScoreBgColor(breakdown.overallScore).replace('bg-', 'bg-').replace('-100', '-500')}`}
               style={{ width: `${breakdown.overallScore}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-slate-400 mt-1">
+          <div className="flex justify-between text-xs text-void-500 mt-1">
             <span>Low</span>
             <span>Medium</span>
             <span>High</span>
@@ -54,40 +54,40 @@ export function RiskBreakdown({ breakdown }: RiskBreakdownProps) {
 
         {/* Category Breakdown */}
         <div className="space-y-4">
-          <h4 className="text-sm font-medium text-slate-700">Risk Categories</h4>
+          <h4 className="text-sm font-medium text-void-300">Risk Categories</h4>
           {breakdown.categories.map((category) => (
             <CategoryBar key={category.category} category={category} />
           ))}
         </div>
 
         {/* Findings Summary */}
-        <div className="mt-6 pt-6 border-t border-slate-200">
-          <h4 className="text-sm font-medium text-slate-700 mb-3">Findings Summary</h4>
+        <div className="mt-6 pt-6 border-t border-void-700/50">
+          <h4 className="text-sm font-medium text-void-300 mb-3">Findings Summary</h4>
           <div className="grid grid-cols-5 gap-2 text-center">
             <FindingStat
               count={breakdown.criticalFindings}
               label="Critical"
-              color="text-red-600 bg-red-50"
+              color="text-risk-400 bg-risk-500/10"
             />
             <FindingStat
               count={breakdown.highFindings}
               label="High"
-              color="text-orange-600 bg-orange-50"
+              color="text-orange-400 bg-orange-500/10"
             />
             <FindingStat
               count={breakdown.mediumFindings}
               label="Medium"
-              color="text-yellow-600 bg-yellow-50"
+              color="text-caution-400 bg-caution-500/10"
             />
             <FindingStat
               count={breakdown.lowFindings}
               label="Low"
-              color="text-blue-600 bg-blue-50"
+              color="text-signal-400 bg-signal-500/10"
             />
             <FindingStat
               count={breakdown.infoFindings}
               label="Info"
-              color="text-slate-600 bg-slate-50"
+              color="text-void-400 bg-void-700"
             />
           </div>
         </div>
@@ -105,11 +105,11 @@ function CategoryBar({ category }: CategoryBarProps) {
     <div>
       <div className="flex items-center justify-between text-sm mb-1">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-slate-700">
+          <span className="font-medium text-void-200">
             {formatCategoryName(category.category)}
           </span>
           {category.findings > 0 && (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-void-400">
               ({category.findings} finding{category.findings !== 1 ? 's' : ''})
             </span>
           )}
@@ -118,13 +118,13 @@ function CategoryBar({ category }: CategoryBarProps) {
           {category.score}
         </span>
       </div>
-      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-void-800 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-300 ${getCategoryBarColor(category.score)}`}
           style={{ width: `${category.score}%` }}
         />
       </div>
-      <p className="text-xs text-slate-500 mt-1">{category.description}</p>
+      <p className="text-xs text-void-400 mt-1">{category.description}</p>
     </div>
   )
 }
@@ -139,7 +139,7 @@ function FindingStat({ count, label, color }: FindingStatProps) {
   return (
     <div className={`rounded-lg p-2 ${color.split(' ')[1]}`}>
       <div className={`text-lg font-bold ${color.split(' ')[0]}`}>{count}</div>
-      <div className="text-xs text-slate-600">{label}</div>
+      <div className="text-xs text-void-400">{label}</div>
     </div>
   )
 }
@@ -168,7 +168,7 @@ export function RiskScoreGauge({ score, size = 'md' }: { score: number; size?: '
           fill="none"
           stroke="currentColor"
           strokeWidth="8"
-          className="text-slate-100"
+          className="text-void-800"
         />
         {/* Score arc */}
         <circle
@@ -206,7 +206,7 @@ export function RiskCategoryIndicator({
   const activeCategories = categories.filter(c => c.score > 0)
 
   if (activeCategories.length === 0) {
-    return <span className="text-sm text-slate-400">No risk flags</span>
+    return <span className="text-sm text-void-500">No risk flags</span>
   }
 
   return (

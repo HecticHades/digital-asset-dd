@@ -235,11 +235,11 @@ export function DocumentRequestsList({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium text-slate-900">Document Requests</h3>
-          <p className="text-sm text-slate-500">
+          <h3 className="text-lg font-medium text-void-100">Document Requests</h3>
+          <p className="text-sm text-void-400">
             Request documents from {clientName}
             {!hasPortalAccount && (
-              <span className="text-amber-600 ml-2">(No portal account)</span>
+              <span className="text-caution-400 ml-2">(No portal account)</span>
             )}
           </p>
         </div>
@@ -254,7 +254,7 @@ export function DocumentRequestsList({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <ClockIcon className="w-5 h-5 text-amber-500" />
+              <ClockIcon className="w-5 h-5 text-caution-400" />
               Awaiting Client Response ({pendingRequests.length})
             </CardTitle>
           </CardHeader>
@@ -274,9 +274,9 @@ export function DocumentRequestsList({
                 <TableRow key={request.id}>
                   <TableCell>
                     <div>
-                      <div className="font-medium text-slate-900">{request.title}</div>
+                      <div className="font-medium text-void-200">{request.title}</div>
                       {request.description && (
-                        <div className="text-sm text-slate-500 truncate max-w-xs">
+                        <div className="text-sm text-void-400 truncate max-w-xs">
                           {request.description}
                         </div>
                       )}
@@ -292,14 +292,14 @@ export function DocumentRequestsList({
                   </TableCell>
                   <TableCell>
                     {request.dueDate ? (
-                      <div className={isPast(new Date(request.dueDate)) ? 'text-red-600' : ''}>
+                      <div className={isPast(new Date(request.dueDate)) ? 'text-risk-400' : 'text-void-200'}>
                         {format(new Date(request.dueDate), 'MMM d, yyyy')}
                         {isPast(new Date(request.dueDate)) && (
                           <span className="text-xs ml-1">(overdue)</span>
                         )}
                       </div>
                     ) : (
-                      <span className="text-slate-400">-</span>
+                      <span className="text-void-500">-</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -323,7 +323,7 @@ export function DocumentRequestsList({
                         onClick={() => openCancelModal(request)}
                         title="Cancel Request"
                       >
-                        <XIcon className="w-4 h-4 text-red-600" />
+                        <XIcon className="w-4 h-4 text-risk-400" />
                       </Button>
                     </div>
                   </TableCell>
@@ -339,7 +339,7 @@ export function DocumentRequestsList({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <FileCheckIcon className="w-5 h-5 text-blue-500" />
+              <FileCheckIcon className="w-5 h-5 text-signal-400" />
               Submitted - Awaiting Review ({submittedRequests.length})
             </CardTitle>
           </CardHeader>
@@ -357,7 +357,7 @@ export function DocumentRequestsList({
               {submittedRequests.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell>
-                    <div className="font-medium text-slate-900">{request.title}</div>
+                    <div className="font-medium text-void-200">{request.title}</div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="default">
@@ -370,13 +370,13 @@ export function DocumentRequestsList({
                         href={`/api/documents/${request.document.id}?preview=true`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary-600 hover:underline flex items-center gap-1"
+                        className="text-neon-400 hover:underline flex items-center gap-1"
                       >
                         <FileIcon className="w-4 h-4" />
                         {request.document.originalName}
                       </a>
                     ) : (
-                      <span className="text-slate-400">-</span>
+                      <span className="text-void-500">-</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -413,7 +413,7 @@ export function DocumentRequestsList({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <CheckCircleIcon className="w-5 h-5 text-green-500" />
+              <CheckCircleIcon className="w-5 h-5 text-profit-400" />
               Completed ({completedRequests.length})
             </CardTitle>
           </CardHeader>
@@ -430,7 +430,7 @@ export function DocumentRequestsList({
               {completedRequests.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell>
-                    <div className="font-medium text-slate-900">{request.title}</div>
+                    <div className="font-medium text-void-200">{request.title}</div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="default">
@@ -440,7 +440,7 @@ export function DocumentRequestsList({
                   <TableCell>
                     <RequestStatusBadge status={request.status} />
                   </TableCell>
-                  <TableCell className="text-slate-500">
+                  <TableCell className="text-void-400">
                     {formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}
                   </TableCell>
                 </TableRow>
@@ -454,9 +454,9 @@ export function DocumentRequestsList({
       {requests.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <FileIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-1">No document requests</h3>
-            <p className="text-slate-500 mb-4">
+            <FileIcon className="w-12 h-12 text-void-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-void-200 mb-1">No document requests</h3>
+            <p className="text-void-400 mb-4">
               Create a request to ask {clientName} for specific documents.
             </p>
             <Button onClick={() => setIsCreateModalOpen(true)}>
@@ -480,8 +480,8 @@ export function DocumentRequestsList({
         <ModalContent>
           <div className="space-y-4">
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="p-3 bg-risk-500/10 border border-risk-500/30 rounded-md">
+                <p className="text-sm text-risk-400">{error}</p>
               </div>
             )}
 
@@ -494,14 +494,14 @@ export function DocumentRequestsList({
             />
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-void-300 mb-1">
                 Description (Instructions for client)
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full rounded-md border border-void-700 bg-void-800 px-3 py-2 text-sm text-void-100 placeholder:text-void-500 focus:outline-none focus:ring-2 focus:ring-neon-500 focus:border-neon-500"
                 placeholder="Please provide your most recent bank statement showing your current balance and any transactions from the past 3 months."
               />
             </div>
@@ -534,17 +534,17 @@ export function DocumentRequestsList({
                   id="sendEmail"
                   checked={sendEmail}
                   onChange={(e) => setSendEmail(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                  className="h-4 w-4 rounded border-void-600 bg-void-800 text-neon-500 focus:ring-neon-500"
                 />
-                <label htmlFor="sendEmail" className="text-sm text-slate-700">
+                <label htmlFor="sendEmail" className="text-sm text-void-300">
                   Send email notification to client ({clientEmail})
                 </label>
               </div>
             )}
 
             {!hasPortalAccount && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
-                <p className="text-sm text-amber-700">
+              <div className="p-3 bg-caution-500/10 border border-caution-500/30 rounded-md">
+                <p className="text-sm text-caution-400">
                   This client does not have a portal account. They will not be able to respond to this request online.
                 </p>
               </div>
@@ -582,33 +582,33 @@ export function DocumentRequestsList({
         <ModalContent>
           <div className="space-y-4">
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="p-3 bg-risk-500/10 border border-risk-500/30 rounded-md">
+                <p className="text-sm text-risk-400">{error}</p>
               </div>
             )}
 
-            <p className="text-slate-600">
+            <p className="text-void-300">
               Are you sure you want to cancel this document request?
             </p>
 
             {selectedRequest && (
-              <div className="p-3 bg-slate-50 rounded-md">
-                <p className="font-medium text-slate-900">{selectedRequest.title}</p>
-                <p className="text-sm text-slate-500">
+              <div className="p-3 bg-void-800/50 border border-void-700/50 rounded-md">
+                <p className="font-medium text-void-200">{selectedRequest.title}</p>
+                <p className="text-sm text-void-400">
                   {DOCUMENT_TYPE_LABELS[selectedRequest.category]}
                 </p>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-void-300 mb-1">
                 Cancellation Reason (Optional)
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full rounded-md border border-void-700 bg-void-800 px-3 py-2 text-sm text-void-100 placeholder:text-void-500 focus:outline-none focus:ring-2 focus:ring-neon-500 focus:border-neon-500"
                 placeholder="No longer needed..."
               />
             </div>
@@ -646,28 +646,28 @@ export function DocumentRequestsList({
         <ModalContent>
           <div className="space-y-4">
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="p-3 bg-risk-500/10 border border-risk-500/30 rounded-md">
+                <p className="text-sm text-risk-400">{error}</p>
               </div>
             )}
 
             {selectedRequest && (
               <>
-                <div className="p-3 bg-slate-50 rounded-md">
-                  <p className="font-medium text-slate-900">{selectedRequest.title}</p>
-                  <p className="text-sm text-slate-500">
+                <div className="p-3 bg-void-800/50 border border-void-700/50 rounded-md">
+                  <p className="font-medium text-void-200">{selectedRequest.title}</p>
+                  <p className="text-sm text-void-400">
                     {DOCUMENT_TYPE_LABELS[selectedRequest.category]}
                   </p>
                 </div>
 
                 {selectedRequest.document && (
-                  <div className="border border-slate-200 rounded-md p-3">
-                    <p className="text-sm font-medium text-slate-700 mb-2">Submitted Document:</p>
+                  <div className="border border-void-700/50 rounded-md p-3">
+                    <p className="text-sm font-medium text-void-300 mb-2">Submitted Document:</p>
                     <a
                       href={`/api/documents/${selectedRequest.document.id}?preview=true`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary-600 hover:underline flex items-center gap-1"
+                      className="text-neon-400 hover:underline flex items-center gap-1"
                     >
                       <FileIcon className="w-4 h-4" />
                       {selectedRequest.document.originalName}
@@ -678,14 +678,14 @@ export function DocumentRequestsList({
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-void-300 mb-1">
                 {processAction === 'VERIFIED' ? 'Verification Notes (Optional)' : 'Rejection Reason'}
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full rounded-md border border-void-700 bg-void-800 px-3 py-2 text-sm text-void-100 placeholder:text-void-500 focus:outline-none focus:ring-2 focus:ring-neon-500 focus:border-neon-500"
                 placeholder={
                   processAction === 'VERIFIED'
                     ? 'Document verified successfully...'
